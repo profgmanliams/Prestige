@@ -1,0 +1,11 @@
+*.log
+
+node_modules
+
+/backend/assets/static
+
+/frontend/dist
+/frontend/dist-*
+/frontend/coverage
+
+/ui-tests/prestige
