@@ -5,3 +5,10 @@ export default class SecretsPack {
 	constructor() {
 		this.currentEnv = ""
 		this.configStr = ""
+	}
+
+	getEnvNames() {
+		return [
+			"dev",
+			"staging",
+			"prod",
