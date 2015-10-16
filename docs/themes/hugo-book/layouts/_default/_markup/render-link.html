@@ -1,2 +1,3 @@
 {{- $isRemote := or (in .Destination "://") (strings.HasPrefix .Destination "//") -}}
 <a href="{{ .Destination | safeURL }}"
+   {{- with .Title}} title="{{ . }}"{{ end }}
