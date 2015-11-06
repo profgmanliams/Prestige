@@ -231,3 +231,119 @@ function WorkspaceView(): m.Component {
 					m(
 						NavLink,
 						{ onclick: onFileBucketToggle, isActive: ModalManager.isShowing(VisiblePopup.FileBucketPopup) },
+						[
+							m(Icons.folderClosed),
+							`FileBucket (${ workspace.fileBucket.size })`,
+						],
+					),
+					[
+						authState === AuthState.PENDING
+							? [m(Icons.user), m(Icons.spinner, { style: "bold" })]
+							: m(
+								NavLink,
+								{
+									class: "t-login-signup-btn",
+									onclick: onLoginFormToggle,
+									isActive: ModalManager.isShowing(VisiblePopup.LoginForm),
+								},
+								[
+									m(Icons.user),
+									authState === AuthState.LOGGED_IN ? "Profile" : "LogIn/SignUp",
+								],
+							),
+					],
+					m(
+						NavLink,
+						{ onclick: onAboutPaneToggle, isActive: ModalManager.isShowing(VisiblePopup.AboutPane) },
+						[
+							m(Icons.info),
+							"About",
+						],
+					),
+					m(NavLink, { href: "/docs/" }, [m(Icons.question), "Docs", m(Icons.arrowSquareOut)]),
+					m(
+						NavLink,
+						{ href: REPO_URL + "/issues/new" },
+						["Report a problem", m(Icons.arrowSquareOut)],
+					),
+				]),
+			]),
+			m(Sidebar, { workspace }),
+			// The order of the below is a bit unintuitive, but is needed.
+			// Firstly, the parent element of these two, is a grid container. So layout can be different from order.
+			// Secondly, we need editor's layout to change, depending on result-pane's existence. So, we need these two
+			// ... to be next to each other in this order, so that a `+` selector works for layout change.
+			m(ResultPane, { workspace }),
+			m(EditorPane, { workspace }),
+		])
+	}
+
+	function onAboutPaneToggle() {
+		ModalManager.toggleDrawer(
+			() => m(ModalManager.DrawerLayout, { title: "About" }, m(AboutModal)),
+			VisiblePopup.AboutPane,
+		)
+	}
+
+	function onCookiesToggle() {
+		ModalManager.toggleDrawer(
+			() => m(CookiesModal, { cookieJar: workspace.cookieJar, workspace }),
+			VisiblePopup.Cookies,
+		)
+	}
+
+	function onFileBucketToggle() {
+		ModalManager.toggleDrawer(
+			() => m(FileBucketModal, { fileBucket: workspace.fileBucket }),
+			VisiblePopup.FileBucketPopup,
+		)
+	}
+
+	function onLoginFormToggle() {
+		ModalManager.toggleDrawer(() => m(LoginFormModal), VisiblePopup.LoginForm)
+	}
+
+	function onColorPaletteToggle() {
+		ModalManager.toggleDrawer(() => m(ColorPaletteModal), VisiblePopup.ColorPalette)
+	}
+}
+
+function EditorPane(): m.Component<{ class?: string, workspace: Workspace }> {
+	return { view, oncreate }
+
+	function oncreate(vnode: VnodeDOM<{ class?: string, workspace: Workspace }>): void {
+		if (!(vnode.dom.firstElementChild instanceof HTMLElement)) {
+			throw new Error(
+				"CodeMirror for Editor cannot be initialized unless `vnode.dom.firstElementChild` is an HTMLElement.",
+			)
+		}
+
+		const bodyEl = vnode.dom.querySelector(".body")
+		if (bodyEl != null) {
+			vnode.attrs.workspace.initCodeMirror(bodyEl as HTMLElement)
+		} else {
+			throw new Error("Unable to find body element in editor pane for initializing CodeMirror.")
+		}
+	}
+
+	function view(vnode: VnodeDOM<{ class?: string, workspace: Workspace }>): m.Vnode {
+		const { workspace } = vnode.attrs
+		workspace.doFlashes()
+		workspace.codeMirror?.refresh()
+
+		let saveButtonSpace: m.Children
+
+		if (!isManualSaveAvailable()) {
+			saveButtonSpace = m("em.pa1", "Autosaved")
+
+		} else {
+			saveButtonSpace = m(".stack-view", [
+				m(
+					NavLink,
+					{
+						onclick: () => {
+							workspace.saveSheetManual()
+						},
+					},
+					[m(Icons.floppyDisk, { style: "bold" }), "Save document"],
+				),

@@ -1,0 +1,130 @@
+import m from "mithril"
+import Stream from "mithril/stream"
+import { authUrl, getRecaptchaSiteKey } from "_/Env"
+import Toaster from "_/Toaster"
+
+export const enum AuthState {
+	PENDING,
+	LOGGED_IN,
+	ANONYMOUS,
+	OAUTH_WAITING,
+}
+
+export interface User {
+	email: string
+	isGitHubConnected: boolean
+}
+
+interface AuthMessage {
+	type: "oauth"
+	provider: "github"
+	isApproved: boolean
+	error?: string
+}
+
+const AUTH_URL_BASE = authUrl()
+
+declare const grecaptcha: {
+	enterprise: {
+		ready(callback: ((nothing: unknown) => void)): void
+		execute(siteKey: string, options: { action: string }): Promise<string>
+	}
+}
+
+class AuthServiceImpl {
+	authState: AuthState
+	currentUser: Stream<null | User>  // Deprecated
+	email: Stream<string>
+	isGistAvailable: Stream<boolean>
+	oAuthWindow: null | Window
+
+	constructor() {
+		this.authState = AuthState.PENDING
+		// TODO: Use a non-null sentinel value for indicating anonymous user.
+		this.currentUser = Stream(null)
+		this.email = Stream("")
+		this.isGistAvailable = Stream(false)
+		this.oAuthWindow = null
+
+		this.currentUser.map(async (user): Promise<void> => {
+			this.email(user ? user.email : "anonymous")
+			m.redraw()
+		})
+	}
+
+	check(): void {
+		m.request<{ user: null | User }>({
+			method: "GET",
+			url: AUTH_URL_BASE + "profile",
+			withCredentials: true,
+		})
+			.then(response => {
+				if (response.user == null) {
+					this.authState = AuthState.ANONYMOUS
+					this.isGistAvailable(false)
+					this.currentUser(null)
+				} else {
+					this.authState = AuthState.LOGGED_IN
+					this.isGistAvailable(response.user?.isGitHubConnected ?? false)
+					this.currentUser(response.user)
+				}
+			})
+			.catch(() => {
+				this.authState = AuthState.ANONYMOUS
+				this.isGistAvailable(false)
+				this.currentUser(null)
+			})
+			.finally(m.redraw)
+	}
+
+	getAuthState(): AuthState {
+		return this.authState
+	}
+
+	async signup(email: string, password: string): Promise<void> {
+		const recaptchaSiteKey = await getRecaptchaSiteKey()
+		let token: null | string = null
+
+		if (recaptchaSiteKey !== "") {
+			if (typeof grecaptcha === "undefined") {
+				await new Promise((resolve, reject) => {
+					const s = document.createElement("script")
+					s.src = "https://www.google.com/recaptcha/enterprise.js?render=" + recaptchaSiteKey
+					s.onload = resolve
+					s.onerror = reject
+					document.body.appendChild(s)
+				})
+			}
+
+			await new Promise(resolve => grecaptcha.enterprise.ready(resolve))
+
+			try {
+				token = await grecaptcha.enterprise.execute(recaptchaSiteKey, { action: "SIGNUP" })
+			} catch (error) {
+				console.error("Error getting reCAPTCHA token", error)
+				alert("Unable to do reCAPTCHA, signup failed.")
+				return
+			}
+		}
+
+		return this.authAction("signup", email, password, token)
+	}
+
+	login(email: string, password: string): Promise<void> {
+		return this.authAction("login", email, password)
+	}
+
+	authAction(urlPath: string, email: string, password: string, recaptchaToken: null | string = null): Promise<void> {
+		const prevState = this.authState
+		this.authState = AuthState.PENDING
+
+		return m.request<{ user: null | User }>({
+			method: "POST",
+			url: AUTH_URL_BASE + urlPath,
+			withCredentials: true,
+			body: {
+				email,
+				password,
+				recaptchaToken,
+			},
+			headers: {
