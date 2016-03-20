@@ -1,0 +1,131 @@
+import { buildQueryString } from "mithril"
+import interpolate from "_/interpolate"
+import type Context from "_/Context"
+import { MultiPartForm } from "_/BodyTypes"
+
+export interface RequestDetails {
+	method: string
+	url: string
+	headers: Headers
+	bodyType: string
+	body: string
+}
+
+const AsyncFunction = Object.getPrototypeOf(async () => 0).constructor
+
+export async function extractRequest(lines: string[], runLineNum: number, context: Context): Promise<RequestDetails> {
+
+	const structure: Block[] = parse(lines)
+	console.log("structure", structure)
+
+	const scriptBlocks: JavascriptBlock[] = []
+	let requestBlock: null | HttpRequestBlock = null
+
+	for (const block of structure) {
+		if (block.start > runLineNum) {
+			// This block is completely below the runLineNum.
+			break
+		}
+
+		if (block.type === BlockType.JAVASCRIPT) {
+			if (block.end >= runLineNum) {
+				throw new Error("Can't execute from inside a script block.")
+			} else {
+				scriptBlocks.push(block)
+			}
+
+		} else if (block.type === BlockType.HTTP_REQUEST && block.end >= runLineNum) {
+			requestBlock = block
+			break
+
+		}
+	}
+
+	if (requestBlock == null) {
+		throw new Error("Couldn't identify the request to be run.")
+	}
+
+	for (const block of scriptBlocks) {
+		const code = lines.slice(block.start, block.end + 1).join("\n")
+		await (new AsyncFunction(code).call(context))
+	}
+
+	const details = {
+		method: "GET",
+		url: "",
+		bodyType: "raw",
+		body: "",
+		headers: new Headers(),
+	}
+
+	const renderedLines = interpolate(
+		lines.slice(requestBlock.header.start, requestBlock.header.end + 1).join("\n"),
+		context,
+	).split("\n")
+	const [method, ...urlParts] = renderedLines[0].split(/\s+/)
+	details.method = method.toUpperCase()
+	details.url = urlParts.join(" ")
+
+	const queryParams: string[] = []
+	let isHeadersStarted = false
+	for (const rLine of renderedLines.slice(1)) {
+		if (!isHeadersStarted && !rLine.match(/^\s/)) {
+			isHeadersStarted = true
+		}
+
+		if (isHeadersStarted) {
+			const [name, ...valueParts] = rLine.split(/:\s*/)
+			if (name === "") {
+				throw new Error("Header name cannot be blank.")
+			}
+			details.headers.append(name, valueParts.join(":"))
+		} else {
+			queryParams.push(rLine.replace(/^\s+/, ""))
+		}
+	}
+
+	if (queryParams.length > 0) {
+		const paramsObject: Record<string, string> = {}
+		for (const param of queryParams) {
+			const parts = param.split("=")
+			paramsObject[parts[0]] = parts.length > 1 ? parts.slice(1).join("=") : ""
+		}
+		details.url += (details.url.includes("?") ? "&" : "?") + buildQueryString(paramsObject)
+	}
+
+	if (requestBlock.payload != null) {
+		const bodyLines = lines.slice(requestBlock.payload.start, requestBlock.payload.end + 1)
+
+		if (bodyLines[0].startsWith("=")) {
+			// Replace that `=` with `return` and we assume what followed that `=` is a single JS expression.
+			const code = "return " + bodyLines.join("\n").substr(1)
+			const body = await (new AsyncFunction(code).call(context))
+			if (typeof body === "string") {
+				details.body = body
+			} else if (body == null) {
+				details.body = ""
+			} else if (body instanceof MultiPartForm) {
+				details.bodyType = "multipart/form-data"
+				details.headers.set("Content-Type", "multipart/form-data")
+				const rawData: Record<string, unknown> = {}
+				for (const [key, value] of body) {
+					rawData[key] = value
+				}
+				details.body = JSON.stringify(rawData)
+			} else {
+				details.headers.set("Content-Type", "application/json")
+				details.body = JSON.stringify(body)
+			}
+
+		} else {
+			details.body = bodyLines.join("\n")
+
+		}
+
+		details.body = details.body.trim()
+	}
+
+	if (requestBlock.eventHandlers != null) {
+		const eventHandlerLines = lines.slice(requestBlock.eventHandlers.start, requestBlock.eventHandlers.end + 1)
+		if (eventHandlerLines[0].startsWith("@onFinish")) {
+			const code = "return {async " + eventHandlerLines.join("\n").substr(1) + "\n}"
