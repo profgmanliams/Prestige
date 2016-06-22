@@ -16,3 +16,12 @@ $endLevel: 6;
         content: unquote($content) " ";
       }
     }
+  }
+}
+
+.book-toc nav ul {
+  li {
+    counter-increment: item;
+
+    &:first-child {
+      counter-reset: item;
