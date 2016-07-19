@@ -1,0 +1,9 @@
+{
+	"name": "Prestige",
+	"short_name": "Prestige",
+	"icons": [
+		{
+			"src": "/logo-192.png",
+			"sizes": "192x192",
+			"type": "image/png"
+		},
