@@ -24,3 +24,29 @@ func DoWithRawBody(ts *tastysession.TastySession, r httpclient.Request) {
 
 	for name, value := range r.Headers {
 		request.Header.Set(name, value)
+	}
+
+	w := httptest.NewRecorder()
+	ts.Mux.ServeHTTP(w, request)
+
+	ts.LastResponse = w.Result()
+	responseBody, _ := io.ReadAll(ts.LastResponse.Body)
+	ts.LastResponseBody = utils.ParseJson(responseBody)
+}
+
+func TestDenyUrlencodedPayload(t *testing.T) {
+	ts := tastysession.New(t)
+
+	paths := []string{
+		"auth/register",
+		"auth/login",
+		"auth/profile",
+		"auth/logout",
+		"auth/github",
+		"auth/github/callback",
+		"gist",
+		"gist/git-file/owner/id/name",
+		"gist/git-file/owner/id",
+		"gist/update/id",
+		"proxy",
+	}
