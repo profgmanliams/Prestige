@@ -11,3 +11,16 @@ interface Attrs {
 
 export default {
 	view,
+}
+
+function view(vnode: VnodeDOM<Attrs>): m.Children {
+	let scheme = ""
+
+	if (vnode.attrs.style === "primary") {
+		scheme = ".primary"
+	}
+
+	return m(
+		"button" + scheme,
+		{
+			class: vnode.attrs.class || "",
