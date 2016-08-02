@@ -17,3 +17,10 @@ const Table: m.Component<Attrs> = {
 				{
 					class: vnode.attrs.tableClass,
 					style: {
+						minWidth: "100%",
+					},
+				},
+				[
+					vnode.attrs.thead != null && m("thead", vnode.attrs.thead),
+					m("tbody", vnode.children),
+					vnode.attrs.tfoot != null && m("tfoot", vnode.attrs.tfoot),
