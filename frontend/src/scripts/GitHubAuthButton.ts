@@ -8,3 +8,7 @@ export default {
 			Button,
 			{
 				class: "t-github-auth-btn",
+				onclick() {
+					AuthService.startOAuth()
+				},
+			},
