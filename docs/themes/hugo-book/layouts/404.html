@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="{{ .Site.Language.Lang }}">
+
+  <head>
+    {{ partial "docs/html-head" . }}
+    {{ partial "docs/inject/head" . }}
+
+    <style>
+      .not-found {
+        text-align: center;
+      }
+      .not-found h1 {
+        margin: .25em 0 0 0;
+        opacity: .25;
+        font-size: 40vmin;
+      }
+    </style>
+  </head>
+
+  <body>
+    <main class="flex justify-center not-found">
+      <div>
