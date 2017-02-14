@@ -3,3 +3,8 @@
 
 // Webkit
 ::-webkit-scrollbar {
+  width: $padding-8;
+}
+
+::-webkit-scrollbar-thumb {
+  background: transparent;
