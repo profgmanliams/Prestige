@@ -129,3 +129,134 @@ export async function extractRequest(lines: string[], runLineNum: number, contex
 		const eventHandlerLines = lines.slice(requestBlock.eventHandlers.start, requestBlock.eventHandlers.end + 1)
 		if (eventHandlerLines[0].startsWith("@onFinish")) {
 			const code = "return {async " + eventHandlerLines.join("\n").substr(1) + "\n}"
+			const onFinishHandler: unknown = new Function(code).call(context).onFinish
+			if (typeof onFinishHandler === "function") {
+				context.on("finish", onFinishHandler.bind(context))
+			}
+		}
+	}
+
+	return details
+}
+
+export const enum BlockType {
+	PAGE_BREAK,
+	HTTP_REQUEST,
+	JAVASCRIPT,
+}
+
+interface BlockBase {
+	// TODO: The start and end are both inclusive currently, and mark the start and end of *content*, not blank lines
+	//   If any. Change this to have `end` be exclusive, and both figures include whitespace around the block content.
+	type: BlockType
+	start: number
+	end: number
+}
+
+export interface PageBreakBlock extends BlockBase {
+	type: BlockType.PAGE_BREAK
+	tail: string
+}
+
+export interface HttpRequestBlock extends BlockBase {
+	type: BlockType.HTTP_REQUEST
+	header: {
+		start: number
+		end: number
+	}
+	payload: null | {
+		start: number
+		end: number
+	}
+	eventHandlers?: null | {
+		start: number
+		end: number
+	}
+}
+
+export interface JavascriptBlock extends BlockBase {
+	type: BlockType.JAVASCRIPT;
+}
+
+export type Block = PageBreakBlock | HttpRequestBlock | JavascriptBlock
+
+export function parse(input: string[] | string): Block[] {
+	const lines: string[] = typeof input === "string" ? input.split("\n") : input
+
+	const blocks: Block[] = []
+
+	let state = "begin"
+	let lastNonBlank = -1
+	let currentBlock: null | Block = null
+
+	for (const [index, line] of lines.entries()) {
+		const hasText = line.trim() !== ""
+		let isComment = false
+
+		if (line.startsWith("###")) {
+			if (currentBlock) {
+				currentBlock.end = index - 1
+				if (currentBlock.type === BlockType.HTTP_REQUEST) {
+					if (currentBlock.eventHandlers != null) {
+						currentBlock.eventHandlers.end = lastNonBlank
+					} else if (currentBlock.payload != null) {
+						currentBlock.payload.end = lastNonBlank
+					} else {
+						currentBlock.header.end = lastNonBlank
+					}
+				}
+			}
+
+			const tail = line.replace(/^#+\s*/, "")
+			blocks.push({ start: index, end: index, type: BlockType.PAGE_BREAK, tail })
+			if (tail === "javascript") {
+				state = "javascript-before-content"
+				currentBlock = {
+					type: BlockType.JAVASCRIPT,
+					start: -1,
+					end: -1,
+				}
+			} else {
+				state = "http-before-headers"
+				currentBlock = {
+					type: BlockType.HTTP_REQUEST,
+					start: -1,
+					end: -1,
+					header: {
+						start: -1,
+						end: -1,
+					},
+					payload: null,
+				}
+			}
+			blocks.push(currentBlock)
+
+		} else if (line.startsWith("#")) {
+			// This is a comment line. Just ignore.
+			isComment = true
+
+		} else if (!hasText) {
+			if (state === "http-headers") {
+				state = "http-before-payload"
+				if (currentBlock && currentBlock.type === BlockType.HTTP_REQUEST) {
+					currentBlock.header.end = lastNonBlank
+				}
+			}
+
+		} else if (hasText) {
+			if (state === "begin") {
+				state = "http-headers"
+				currentBlock = {
+					type: BlockType.HTTP_REQUEST,
+					start: lastNonBlank + 1,
+					end: index,
+					header: {
+						start: index,
+						end: index,
+					},
+					payload: null,
+				}
+				blocks.push(currentBlock)
+
+			} else if (state === "http-before-headers") {
+				state = "http-headers"
