@@ -378,3 +378,384 @@ pre
 		flex-grow: 1
 
 	> footer
+		border-top: 1px solid var(--border-color)
+
+.modal2-mask
+	position: absolute
+	top: 0
+	left: 0
+	right: 0
+	bottom: 0
+	z-index: 100
+	opacity: .8
+
+.modal2
+	position: absolute
+	border-radius: .3rem
+	max-width: 50vw
+	left: 50%
+	transform: translateX(-50%)
+	max-height: 90vh
+	top: 5vh
+	z-index: 110
+	overflow: hidden
+	box-shadow: 0 9px 72px #0009
+	display: flex
+	flex-direction: column
+
+.mask
+	position: absolute
+	top: 0
+	left: 0
+	width: 100%
+	height: 100%
+
+.loading
+	padding: 12px
+	border-radius: 6px
+	font-size: 3em
+	background-color: var(--page-bg)
+	display: inline-block
+	box-shadow: 0 0 72px #0004
+
+label
+	cursor: pointer
+
+.auth-pane
+	display: flex
+
+	.auth-options
+		display: flex
+		flex-direction: column
+
+		button
+			margin: 6px 0
+			font-size: 1.1em
+
+form.grid, form > .grid
+	display: grid
+	grid: auto / minmax(90px, auto) minmax(300px, auto)
+	align-items: center
+	margin: 0 auto
+
+	> *
+		margin: 6px
+
+	select
+		max-width: 400px
+
+	input[type=text]
+		padding: 6px
+		border: 1px solid var(--border-color)
+		border-radius: 3px
+		box-shadow: 0 0 2px inset #0002
+
+		&:focus
+			outline: none
+			border-color: var(--active-tab-bg)
+			box-shadow: 0 0 6px var(--active-tab-bg)
+
+		&::placeholder
+			font-style: italic
+
+	input[type=number]
+		max-width: 9ch
+
+.toasts
+	width: 400px
+	z-index: 99
+	pointer-events: none
+
+	> *
+		position: relative
+		pointer-events: auto
+		animation: toast .2s
+
+		&.close
+			animation: toast-close .2s
+
+		&:hover .close-btn
+			display: block
+
+	.close-btn
+		cursor: pointer
+		position: absolute
+		left: 0
+		top: 0
+		transform: translate(-50%, -50%)
+		border-radius: 50%
+		width: 1.6em
+		height: 1.6em
+		padding: 0
+		overflow: hidden
+		display: none
+
+details.fold
+	display: inline-block
+	position: relative
+	width: 100%
+
+	summary
+		display: block
+
+		.cm-comment
+			// Item count of nested object or array.
+			margin-left: 1ch
+			opacity: .7
+
+			&:hover
+				opacity: 1
+
+		.line-nums
+			cursor: pointer
+
+	summary:before
+		content: "▶"
+		display: block
+		font-size: .8em
+		position: absolute
+		left: 3px
+		pointer-events: none
+
+	&[open] > summary:before
+		content: "▼ "
+
+.provider-block
+	// A single provider inside the document browser.
+	ul
+		list-style: none
+		padding: 0
+		margin: 0
+
+		a
+			display: block
+			padding: 3px 6px
+			text-decoration: none
+			color: inherit
+
+			&:hover
+				background-color: var(--page-bg2)
+
+	li > ul
+		margin-left: 1.3em
+
+	+ .provider-block
+		margin-top: 2em
+
+.stack-view
+	position: relative
+	overflow: hidden
+
+	> :not(:first-child)
+		position: absolute
+		left: 0
+		top: 0
+		display: flex
+		height: 100%
+		align-items: center
+		width: 100%
+		justify-content: center
+		background-color: var(--page-bg)
+
+@keyframes toast
+	from
+		opacity: 0
+		transform: translateY(2rem)
+	to
+		opacity: 1
+		transform: none
+
+@keyframes toast-close
+	from
+		opacity: 1
+		transform: none
+	to
+		opacity: 0
+		transform: translateY(-2em)
+
+// Animation for "Copied!" message when clicking on copy buttons.
+@keyframes ghost
+	from
+		opacity: 1
+		transform: scale(1.5)
+	to
+		opacity: 0
+		transform: translateY(-3em) scale(2.5)
+
+@keyframes spin
+	from
+		transform: rotate(0)
+	to
+		transform: rotate(360deg)
+
+// Theming
+
+/* Color naming rules:
+	1. Numbered colors should be 1-9 (inclusive) only.
+	2. Shade at 1 should be close to black.
+	3. Shade at 9 should be close to white.
+	*/
+
+@mixin light-theme
+	--page-bg: var(--gray-9)
+	// Used for headers and modals.
+	--page-bg2: var(--gray-8)
+	--page-fg: var(--gray-2)
+	--scrollbar-bg: var(--page-bg)
+	--scrollbar-fg: var(--gray-5)
+	--border-color: var(--gray-6)
+
+	--link-color: var(--blue-5)
+
+	--selection-bg: var(--blue-8)
+	--selection-fg: var(--blue-1)
+
+	--gutter-bg: var(--gray-8)
+	--gutter-fg: var(--gray-6)
+	--gutter-marker-fg: var(--red-3)
+	--gutter-marker-subtle-fg: var(--gray-6)
+	--cursor-color: var(--gray-4)
+
+	--cm-comment: var(--primary-3)
+	--cm-atom: var(--primary-3)
+	--cm-number: var(--primary-3)
+
+	--cm-property: var(--green-5)
+	--cm-attribute: var(--green-5)
+	--cm-keyword: var(--red-3)
+	--cm-string: var(--yellow-4)
+	--cm-string-2: var(--yellow-4)
+
+	--cm-variable: var(--green-5)
+	--cm-variable-2: var(--blue-5)
+	--cm-def: var(--blue-5)
+	--cm-bracket: var(--gray-2)
+	--cm-tag: var(--red-3)
+	--cm-link: var(--primary-5)
+	--cm-error-bg: var(--red-3)
+	--cm-error-fg: var(--gray-4)
+
+	--cursor-line-bg: var(--blue-9)
+	--match-bracket-fg: var(--gray-8)
+	--match-bracket-bg: var(--blue-5)
+
+	--js-background: var(--yellow-9)
+
+	--active-tab-fg: var(--primary-9)
+	--active-tab-bg: var(--primary-3)
+
+	--nav-link-hover-bg: var(--primary-9)
+	--nav-link-hover-fg: var(--primary-1)
+
+	.nav-link:hover:not(.active)
+		background-color: var(--nav-link-hover-bg)
+		color: var(--nav-link-hover-fg)
+
+	.cm-tab
+		background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1rem" height="1rem" viewBox="0 0 24 24"><path d="M 3 9 l 3 3 l -3 3" stroke="black" stroke-width="2" fill="none"/></svg>')
+		background-repeat: no-repeat
+
+	button
+		&.primary
+			background-color: var(--primary-3)
+			color: var(--primary-9)
+
+		&.danger-light
+			background-color: var(--red-9)
+			color: var(--red-3)
+
+			&:hover
+				background-color: var(--red-3)
+				color: var(--red-9)
+
+	.provider-block a.active
+		background-color: var(--primary-3)
+		color: var(--primary-9)
+
+	.status
+		&.is-2xx
+			background-color: var(--green-3)
+			color: var(--green-9)
+		&.is-3xx
+			background-color: var(--blue-3)
+			color: var(--blue-9)
+		&.is-4xx, &.is-5xx
+			background-color: var(--red-3)
+			color: var(--red-9)
+
+	.flash
+		background-color: var(--primary-7)
+
+	.response
+		tr:hover
+			background-color: var(--gray-8)
+
+	.result-pane.error
+		background-color: var(--red-9)
+		color: var(--red-1)
+
+	p.info
+		background-color: var(--blue-9)
+		color: var(--blue-1)
+
+	.modal2-mask
+		background-color: var(--page-bg2)
+
+	.modal2
+		background-color: var(--page-bg)
+
+@mixin dark-theme
+	--page-bg: var(--gray-2)
+	// Used for headers and modals.
+	--page-bg2: var(--gray-1)
+	--page-fg: var(--gray-7)
+	--scrollbar-bg: var(--page-bg)
+	--scrollbar-fg: var(--gray-6)
+	--border-color: var(--gray-3)
+
+	--link-color: var(--blue-5)
+
+	--selection-bg: var(--blue-2)
+	--selection-fg: var(--blue-9)
+
+	--gutter-bg: var(--gray-1)
+	--gutter-fg: var(--gray-5)
+	--gutter-marker-fg: var(--red-3)
+	--gutter-marker-subtle-fg: var(--gray-4)
+	--cursor-color: var(--gray-6)
+
+	--cm-comment: var(--primary-7)
+	--cm-atom: var(--primary-5)
+	--cm-number: var(--primary-5)
+
+	--cm-property: var(--green-5)
+	--cm-attribute: var(--green-5)
+	--cm-keyword: var(--red-5)
+	--cm-string: var(--yellow-7)
+
+	--cm-variable: var(--green-5)
+	--cm-variable-2: var(--blue-5)
+	--cm-def: var(--blue-5)
+	--cm-bracket: var(--gray-7)
+	--cm-tag: var(--red-6)
+	--cm-link: var(--primary-5)
+	--cm-error-bg: var(--red-3)
+	--cm-error-fg: var(--gray-6)
+
+	--cursor-line-bg: var(--gray-3)
+	--match-bracket-fg: var(--gray-9)
+	--match-bracket-bg: transparent
+
+	--js-background: var(--yellow-1)
+
+	--active-tab-fg: var(--primary-9)
+	--active-tab-bg: var(--primary-2)
+
+	--nav-link-hover-bg: var(--primary-1)
+	--nav-link-hover-fg: var(--primary-9)
+
+	.nav-link:hover:not(.active)
+		background-color: var(--nav-link-hover-bg)
+		color: var(--nav-link-hover-fg)
+
+	.cm-tab
