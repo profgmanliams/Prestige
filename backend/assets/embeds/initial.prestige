@@ -1,0 +1,20 @@
+# Welcome to Prestige! Your newest developer tool!
+# Just enter the HTTP requests you want to make and hit Ctrl+Enter (or Cmd+Enter) to execute.
+# Like this one right here:
+
+GET https://httpbun.com/get?name=haha
+
+###
+
+# Lines starting with a single '#' like this are comments.
+# Learn more about the syntax at ${window.location.origin}/docs/guides/syntax/.
+# Let's make a POST request!
+
+POST https://httpbun.com/post
+Content-Type: application/x-www-form-urlencoded
+
+username=sherlock&password=elementary
+
+###
+
+# Custom headers, easy as popcorn.
