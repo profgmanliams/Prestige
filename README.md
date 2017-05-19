@@ -16,3 +16,21 @@ on [Discord](https://discord.gg/6tc9fMmYRW).
 ![Prestige dark model screenshot](https://github.com/sharat87/prestige/raw/master/docs/content/img/screenshot-dark.png#gh-dark-mode-only)
 
 If you face any problems or have a suggestion, please [reach out on Discord](https://discord.gg/6tc9fMmYRW),
+or [create an issue](https://github.com/sharat87/prestige/issues/new).
+
+## Features
+
+- Define requests in plain text, hit `Ctrl+Enter` (or `Cmd+Enter`) to execute and view results.
+- Write plain, familiar Javascript for templating within your requests.
+- Shows all responses in a redirect chain, if request redirects.
+- Save your Prestige documents to Gist.
+- Export requests as cURL commands. Please [open an issue](https://github.com/sharat87/prestige/issues/new) if you'd
+  like to see more export formats.
+- Isolated cookie management.
+- Uploading files to APIs is as simple as drag-dropping the file and calling a function.
+- Light and dark modes, for multiple themes.
+
+## Developing
+
+Please ensure you have NodeJS (with yarn) and Go, of versions as specified in
+the [`.tool-versions`](https://github.com/sharat87/prestige/blob/master/.tool-versions) file, before trying the
