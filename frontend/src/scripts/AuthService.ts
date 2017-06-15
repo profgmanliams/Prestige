@@ -128,3 +128,68 @@ class AuthServiceImpl {
 				recaptchaToken,
 			},
 			headers: {
+				"Content-Type": "application/json",
+			},
+		})
+			.then((response) => {
+				this.authState = AuthState.LOGGED_IN
+				this.isGistAvailable(response.user?.isGitHubConnected ?? false)
+				this.currentUser(response.user)
+			})
+			.catch(error => {
+				this.authState = prevState
+				return Promise.reject(error)
+			})
+	}
+
+	logout(): Promise<void> {
+		const prevState = this.authState
+		this.authState = AuthState.PENDING
+
+		return m.request<void>({
+			method: "POST",
+			url: AUTH_URL_BASE + "logout",
+			withCredentials: true,
+			headers: {
+				"Content-Type": "application/json",
+			},
+		})
+			.then(() => {
+				this.authState = AuthState.ANONYMOUS
+				this.isGistAvailable(false)
+				this.currentUser(null)
+			})
+			.catch(() => {
+				this.authState = prevState
+			})
+	}
+
+	startOAuth(): void {
+		const prevState = this.authState
+		this.authState = AuthState.OAUTH_WAITING
+
+		if (this.oAuthWindow != null) {
+			if (!this.oAuthWindow.closed) {
+				this.oAuthWindow.close()
+			}
+			this.oAuthWindow = null
+		}
+
+		this.oAuthWindow = window.open(
+			"/auth/github",
+			"github-oauth",
+			"menubar=no,status=no,width=600,height=500",
+		)
+
+		if (this.oAuthWindow == null) {
+			alert("Unable to open OAuth popup!")
+			this.authState = prevState
+			return
+		}
+
+		const intervalId = setInterval(() => {
+			if (this.oAuthWindow == null || this.oAuthWindow.closed) {
+				this.check()
+				clearInterval(intervalId)
+				this.oAuthWindow = null
+				m.redraw()
