@@ -51,3 +51,109 @@ function view(): m.Children {
 
 function oncreate(vnode: m.VnodeDOM): void {
 	(vnode.dom?.querySelector("input[type=email]") as HTMLInputElement)?.focus()
+}
+
+class AuthFormView implements m.ClassComponent<never> {
+	currentView: "login" | "signup" | "forgot-request"
+	isSignupLoading: boolean
+	signupError: m.Children
+
+	constructor() {
+		this.currentView = "login"
+		this.isSignupLoading = false
+		this.signupError = null
+	}
+
+	view(): m.Children {
+		const onLoginSubmit = (event: Event) => {
+			event.preventDefault()
+			AuthService
+				.login((event.target as LoginForm).loginEmail.value, (event.target as LoginForm).loginPassword.value)
+				.then(ModalManager.close)
+				.catch((error) => {
+					console.error("Error logging in", error)
+					alert("Error logging in: [" + error.code + "] " + error.message)
+				})
+		}
+
+		const onSignupSubmit = (event: Event) => {
+			event.preventDefault()
+			this.signupError = null
+			this.isSignupLoading = true
+
+			const password = (event.target as LoginForm).signupPassword.value
+
+			if (password !== (event.target as LoginForm).signupPasswordRepeat.value) {
+				alert("The passwords don't match. Please repeat the same password and then click Sign Up.")
+				return
+			}
+
+			AuthService.signup((event.target as LoginForm).signupEmail.value, password)
+				.then(user => {
+					console.log("User signed up", user)
+					ModalManager.close()
+				})
+				.catch(error => {
+					console.dir(error)
+					console.error("Error signing up")
+					const code = error?.response?.error?.code
+
+					if (code === "email-duplicate") {
+						this.signupError = [
+							"There's an account with that email already. Please ",
+							m(
+								"a",
+								{
+									href: "#",
+									onclick: (event1: Event) => {
+										this.currentView = "login"
+										event1.preventDefault()
+									},
+								},
+								"login",
+							),
+							".",
+						]
+
+					} else {
+						alert("Error signing up: [" + error?.code + "] " + error?.message)
+
+					}
+				})
+				.finally(() => {
+					this.isSignupLoading = false
+				})
+		}
+
+		const onForgotPasswordSubmit = (event: Event) => {
+			event.preventDefault()
+			AuthService
+				.forgotPasswordRequest((event.target as LoginForm).loginEmail.value)
+				.then(ModalManager.close)
+				.catch((error) => {
+					console.error("Error logging in", error)
+					alert("Error logging in: [" + error.code + "] " + error.message)
+				})
+		}
+
+		return m(".auth-pane", [
+			this.currentView === "login" && m("div", [ // Login form
+				m(
+					GitHubAuthButton,
+					[m(Icons.github), "Login with GitHub"],
+				),
+				m("h2", "Log In"),
+				m("form.grid", { onsubmit: onLoginSubmit }, [
+					m("label", { for: "loginEmail" }, "Email"),
+					m(Input, { id: "loginEmail", type: "email", required: true }),
+					m("label", { for: "loginPassword" }, "Password"),
+					m(Input, { id: "loginPassword", type: "password", required: true, minlength: 6 }),
+					m("p", { style: { "grid-column-end": "span 2", textAlign: "center" } }, [
+						m(Button, { style: "primary", type: "submit" }, "Log in!"),
+					]),
+					m(
+						"a",
+						{
+							"href": "#",
+							onclick: (event: MouseEvent) => {
+								event.preventDefault()
