@@ -31,3 +31,36 @@ function view(vnode: m.VnodeDOM<Attrs, State>): m.Children {
 	console.log(exporter.toCurl({ includeCookies, useLongFlags }).toComponentChildren())
 
 	return m(".ma2", { style: { width: "50vw" } }, [
+		m("h2.ma2", "Export Request"),
+		m("p", [
+			m("label.mh2", [
+				m("input", {
+					type: "checkbox",
+					checked: useLongFlags,
+					onchange(event: Event) {
+						vnode.state.useLongFlags = (event.target as HTMLInputElement).checked
+					},
+				}),
+				m("span.ml1", "Use long options"),
+			]),
+			m("label.mh2", [
+				m("input", {
+					type: "checkbox",
+					checked: includeCookies,
+					onchange(event: Event) {
+						vnode.state.includeCookies = (event.target as HTMLInputElement).checked
+					},
+				}),
+				m("span.ml1", "Include Cookies"),
+			]),
+			request != null && [
+				m(Button, {
+					onclick(event) {
+						if (request != null) {
+							copyToClipboard(
+								exporter.toCurl({ singleLine: true, includeCookies, useLongFlags }).toPlainString(),
+							)
+							showGhost(event.target as HTMLButtonElement)
+						}
+					},
+				}, "Copy as one-line"),
