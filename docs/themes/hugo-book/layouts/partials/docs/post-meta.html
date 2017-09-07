@@ -7,7 +7,3 @@
   <div>
     {{ range $n, $term := $terms }}{{ if $n }}, {{ end }}
       <a href="{{ $term.RelPermalink }}">{{ $term.Title }}</a>
-    {{- end }}
-  </div>
-  {{ end }}
-{{ end }}
