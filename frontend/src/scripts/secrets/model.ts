@@ -8,7 +8,3 @@ export default class SecretsPack {
 	}
 
 	getEnvNames() {
-		return [
-			"dev",
-			"staging",
-			"prod",
