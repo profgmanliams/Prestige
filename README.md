@@ -34,3 +34,21 @@ or [create an issue](https://github.com/sharat87/prestige/issues/new).
 
 Please ensure you have NodeJS (with yarn) and Go, of versions as specified in
 the [`.tool-versions`](https://github.com/sharat87/prestige/blob/master/.tool-versions) file, before trying the
+following commands. I recommend using `asdf-vm` for this, which integrates with the `.tool-versions` file. So, if you
+have `asdf` already setup, you can just do `asdf install` in this repo, and you'll have the correct versions of NodeJS
+and Go.
+
+The project contains a `manage.sh` script that makes development a little easier.
+
+1. `./manage.sh serve-frontend` &mdash; Start frontend Parcel server. This supports full auto-reload.
+2. `./manage.sh serve-backend` &mdash; Start backend server. This _doesn't_ auto-reload when code changes.
+3. `./manage.sh serve-docs` &mdash; Start docs server. This supports auto-reload only for content pages.
+4. `./manage.sh test-*` &mdash; Test frontend/backend/ui (depending on what's in place of `*`).
+5. `./manage.sh build-*` &mdash; Build frontend/backend/docs (depending on what's in place of `*`).
+
+Run the serve commands in parallel, then open <http://localhost:3040>.
+
+## Inspirations
+
+- HTTP Client for Sublime Text: [Requester](https://github.com/kylebebak/Requester).
+- HTTP Client for VS Code: [vscode-restclient](https://github.com/Huachao/vscode-restclient).
