@@ -66,3 +66,72 @@ test("get request with query param with special characters", async () => {
 	const context = makeMockContext()
 
 	const request = await extractRequest([
+		"GET http://httpbun.com/get",
+		"  crazy=this crazy?stuff&with=a bang!",
+	], 0, context)
+
+	expect(request).toBeDefined()
+	expect(request.method).toBe("GET")
+	expect(request.url).toBe("http://httpbun.com/get?crazy=this%20crazy%3Fstuff%26with%3Da%20bang!")
+})
+
+test("get request with multiple query params", async () => {
+	const context = makeMockContext()
+
+	const request = await extractRequest([
+		"GET http://httpbun.com/get",
+		"  first=sherlock",
+		"  last=holmes",
+		"  brother=mycroft",
+	], 0, context)
+
+	expect(request).toBeDefined()
+	expect(request.method).toBe("GET")
+	expect(request.url).toBe("http://httpbun.com/get?first=sherlock&last=holmes&brother=mycroft")
+})
+
+test("get request with headers and multiple query params", async () => {
+	const context = makeMockContext()
+
+	const request = await extractRequest([
+		"GET http://httpbun.com/get",
+		"  first=sherlock",
+		"  last=holmes",
+		"  brother=mycroft",
+		"X-One: value one",
+	], 0, context)
+
+	expect(request).toBeDefined()
+	expect(request.method).toBe("GET")
+	expect(Array.from(request.headers)).toEqual([
+		["x-one", "value one"],
+	])
+	expect(request.url).toBe("http://httpbun.com/get?first=sherlock&last=holmes&brother=mycroft")
+})
+
+test("post request with one line body", async () => {
+	const context = makeMockContext()
+
+	const request = await extractRequest([
+		"POST http://httpbun.com",
+		"",
+		"body goes here",
+	], 0, context)
+
+	expect(request).toBeDefined()
+	expect(request.method).toBe("POST")
+	expect(request.url).toBe("http://httpbun.com")
+	expect(request.body).toBe("body goes here")
+})
+
+test("get request with an ending", async () => {
+	const context = makeMockContext()
+
+	const request = await extractRequest([
+		"POST http://httpbun.com",
+		"",
+		"body goes here",
+		"",
+		"###",
+		"more useless stuff here",
+		"",
