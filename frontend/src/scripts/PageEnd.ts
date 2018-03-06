@@ -1,2 +1,1 @@
 import m from "mithril"
-
