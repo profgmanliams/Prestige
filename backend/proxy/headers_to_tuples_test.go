@@ -7,13 +7,3 @@ import (
 )
 
 func TestHeadersToTuples(t *testing.T) {
-	got := headersToTuples(map[string][]string{
-		"header-one": {"value-one"},
-		"header-two": {"value-two"},
-		"empty-one":  {""},
-	})
-
-	utils.SortHeaderTuples(got)
-
-	want := [][]string{
-		{"Empty-One", ""},
