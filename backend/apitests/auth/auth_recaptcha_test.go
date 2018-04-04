@@ -56,3 +56,32 @@ func TestRegisterWithValidRecaptcha(t *testing.T) {
 				"siteKey":        "rsk",
 				"token":          "recaptcha-dummy-token",
 			},
+		},
+	}, "recaptcha request")
+
+	ts.AssertStatusCode(http.StatusCreated)
+	ts.AssertResponse(map[string]any{
+		"user": map[string]any{
+			"email":             "one@example.com",
+			"isGitHubConnected": false,
+		},
+	})
+}
+
+func TestRegisterWithInvalidRecaptcha(t *testing.T) {
+	ts := tastysession.New(t)
+	ts.Mux.UseRecaptcha("rpi", "rsk", "rak")
+
+	httpClient := &MockHTTPClient{
+		do: func(req httpclient.Request) (*httpclient.Response, error) {
+			return &httpclient.Response{
+				StatusCode: http.StatusOK,
+				Body: utils.ToJson(map[string]any{
+					"tokenProperties": map[string]any{
+						"valid":         false,
+						"invalidReason": "dummy-reason",
+						"action":        "SIGNUP",
+					},
+				}),
+			}, nil
+		},
