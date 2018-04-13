@@ -18,24 +18,3 @@ class ExportedRequest {
 	}
 
 	toPlainString(): string {
-		const parts: string[] = []
-		for (const token of this.tokens) {
-			parts.push(token[0])
-		}
-		return parts.join("")
-	}
-
-	toComponentChildren(): m.Children {
-		const children: m.Children = []
-		for (const token of this.tokens) {
-			children.push(m("span", { class: token[1].replace(/\b(\w)/g, "cm-$1") }, token[0]))
-		}
-		return children
-	}
-}
-
-export class Exporter {
-	request: RequestDetails
-	cookieJar: null | CookieJar
-
-	constructor(request: RequestDetails, cookieJar: null | CookieJar) {
