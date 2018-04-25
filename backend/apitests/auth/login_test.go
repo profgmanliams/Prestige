@@ -19,3 +19,14 @@ func TestLoginForUserWithGithub(t *testing.T) {
 			"password":       "dummy-pass",
 			"recaptchaToken": "",
 		},
+	})
+
+	ts.AssertStatusCode(http.StatusOK)
+	ts.AssertResponse(map[string]any{
+		"user": map[string]any{
+			"email":             email,
+			"isGitHubConnected": true,
+		},
+	})
+}
+
