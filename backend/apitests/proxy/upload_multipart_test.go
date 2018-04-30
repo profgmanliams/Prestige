@@ -27,3 +27,32 @@ func TestMultipartFormField(t *testing.T) {
 	})
 	ts.AssertStatusCode(http.StatusOK)
 
+	ts.Nil(ts.LastResponseBody["cookies"], "cookies")
+	ts.Nil(ts.LastResponseBody["history"], "history")
+
+	responseValue := ts.LastResponseBody["response"].(map[string]any)
+	ts.Equal(float64(200), responseValue["status"], "status")
+	ts.Equal("200 OK", responseValue["statusText"], "statusText")
+
+	remoteResponseBody := utils.ParseJson([]byte(responseValue["body"].(string)))
+	ts.Equal("", remoteResponseBody["data"], "data")
+	ts.Equal(map[string]any{}, remoteResponseBody["args"], "args")
+	ts.Equal(map[string]any{}, remoteResponseBody["files"], "files")
+	ts.Equal(map[string]any{
+		"name": "Sherlock",
+	}, remoteResponseBody["form"], "form")
+	ts.Nil(remoteResponseBody["json"], "json")
+	ts.Equal("POST", remoteResponseBody["method"], "method")
+	ts.Equal("http://localhost:3043/post", remoteResponseBody["url"], "url")
+	// TODO: Check content-type header.
+}
+
+func TestMultipartFileField(t *testing.T) {
+	ts := tastysession.New(t)
+
+	ts.Do(httpclient.Request{
+		Method: http.MethodPost,
+		URL:    "/proxy",
+		Body: map[string]any{
+			"url":    "http://localhost:3043/post",
+			"method": "POST",
