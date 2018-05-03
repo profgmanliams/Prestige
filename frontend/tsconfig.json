@@ -11,10 +11,3 @@
 		"lib": [
 			"DOM",
 			"DOM.Iterable",
-			"ES6",
-			"ES2015.Core",
-			"ES2015.Collection",
-			"ES2017",
-			"ES2018.Promise"
-		],
-		"types": [
