@@ -52,3 +52,30 @@ func main() {
 		m.UseRecaptcha(
 			os.Getenv("RECAPTCHA_PROJECT_ID"),
 			os.Getenv("RECAPTCHA_SITE_KEY"),
+			os.Getenv("RECAPTCHA_API_KEY"),
+		)
+	}
+
+	if os.Getenv("GITHUB_CLIENT_ID") != "" {
+		log.Print("Github Client enabled")
+		m.UseGitHubClient(
+			os.Getenv("GITHUB_CLIENT_ID"),
+			os.Getenv("GITHUB_CLIENT_SECRET"),
+		)
+	}
+
+	s := &http.Server{
+		Handler:        m,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 10,
+	}
+
+	log.Printf("Serving on http://%s...", cfg.BindTarget)
+
+	err = s.Serve(listener)
+	if err != nil {
+		log.Panicf("Server returned error: %v", err)
+	}
+}
+
