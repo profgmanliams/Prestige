@@ -22,3 +22,51 @@ func TestProxyGet(t *testing.T) {
 			"bodyType": "raw",
 			"body":     "",
 		},
+	})
+	ts.AssertStatusCode(http.StatusOK)
+
+	ts.Nil(ts.LastResponseBody["response"].(map[string]any)["cookies"], "cookies")
+	ts.Nil(ts.LastResponseBody["response"].(map[string]any)["history"], "history")
+
+	ts.Equal(ts.LastResponseBody["response"].(map[string]any)["status"], float64(200), "status")
+	ts.Equal(ts.LastResponseBody["response"].(map[string]any)["statusText"], "200 OK", "statusText")
+
+	payload := utils.ParseJson([]byte(ts.LastResponseBody["response"].(map[string]any)["body"].(string)))
+	ts.Equal(payload["method"], "GET", "method in payload")
+	ts.Equal(payload["url"], "http://localhost:3043/get", "url in payload")
+}
+
+func TestProxyPost(t *testing.T) {
+	ts := tastysession.New(t)
+
+	ts.Do(httpclient.Request{
+		Method: http.MethodPost,
+		URL:    "/proxy",
+		Body: map[string]any{
+			"url":      "http://localhost:3043/post",
+			"method":   "POST",
+			"headers":  []string{},
+			"timeout":  300,
+			"bodyType": "raw",
+			"body":     "some post payload",
+		},
+	})
+	ts.AssertStatusCode(http.StatusOK)
+
+	ts.Nil(ts.LastResponseBody["response"].(map[string]any)["cookies"], "cookies")
+	ts.Nil(ts.LastResponseBody["response"].(map[string]any)["history"], "history")
+
+	ts.Equal(ts.LastResponseBody["response"].(map[string]any)["status"], float64(200), "status")
+	ts.Equal(ts.LastResponseBody["response"].(map[string]any)["statusText"], "200 OK", "statusText")
+
+	payload := utils.ParseJson([]byte(ts.LastResponseBody["response"].(map[string]any)["body"].(string)))
+	ts.Equal(payload["method"], "POST", "method in payload")
+	ts.Equal(payload["url"], "http://localhost:3043/post", "url in payload")
+}
+
+func TestProxyPatch(t *testing.T) {
+	ts := tastysession.New(t)
+
+	ts.Do(httpclient.Request{
+		Method: http.MethodPost,
+		URL:    "/proxy",
