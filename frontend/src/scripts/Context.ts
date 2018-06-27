@@ -42,3 +42,25 @@ export default class Context {
 			? Promise.reject(new Error("Workspace not available in this context"))
 			: this.workspace.runTop(lines, runLineNum, true)
 	}
+
+	off(eventName: string, callback: EventCallback): void {
+		this.handlers.get(eventName)?.delete(callback)
+	}
+
+	on(eventName: string, callback: EventCallback): void {
+		(this.handlers.get(eventName) ?? this.handlers.set(eventName, new Set()).get(eventName))?.add(callback)
+	}
+
+	emit(eventName: string, data?: unknown): Promise<unknown> {
+		const promises: Promise<unknown>[] = []
+
+		for (const fn of this.handlers.get(eventName) ?? []) {
+			const value = fn(data)
+			if (isPromise(value)) {
+				promises.push(value as Promise<unknown>)
+			}
+		}
+
+		return (promises.length === 0 ? Promise.resolve() : Promise.all(promises)).finally(m.redraw)
+	}
+
