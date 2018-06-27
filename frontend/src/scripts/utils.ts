@@ -28,18 +28,3 @@ export function repeat<A>(item: A, times: number): A[] {
 	const result: A[] = []
 	while (times-- > 0) {
 		result.push(item)
-	}
-	return result
-}
-
-export function showGhost(el: Element, text = "Copied!"): void {
-	const rect = el.getBoundingClientRect()
-	const ghost = document.createElement("div")
-	ghost.innerText = text
-	ghost.style.position = "fixed"
-	ghost.style.left = rect.x + "px"
-	ghost.style.top = rect.y + "px"
-	ghost.style.minWidth = rect.width + "px"
-	ghost.style.height = rect.height + "px"
-	ghost.style.fontWeight = "bold"
-	ghost.style.zIndex = "500"
