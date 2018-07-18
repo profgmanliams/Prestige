@@ -35,22 +35,3 @@ func loadBindTarget() string {
 		return ":3041"
 	}
 }
-
-func loadAllowedHosts() map[string]any {
-	allowedHosts := map[string]any{}
-	for _, host := range strings.Split(os.Getenv("PRESTIGE_ALLOWED_HOSTS"), ",") {
-		host = strings.TrimSpace(host)
-		if host != "" {
-			allowedHosts[host] = nil
-		}
-	}
-
-	if len(allowedHosts) == 0 {
-		allowedHosts["localhost"] = nil
-		allowedHosts["127.0.0.1"] = nil
-	}
-
-	return allowedHosts
-}
-
-func loadEncryptionKey() []byte {
