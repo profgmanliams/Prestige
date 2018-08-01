@@ -7,7 +7,3 @@
     <a class="flex align-center" href="{{ .Site.Params.BookRepo }}/{{ $commitPath }}/{{ .GitInfo.Hash }}" title='{{ i18n "Last modified by" }} {{ .GitInfo.AuthorName }} | {{ $date }}' target="_blank" rel="noopener">
       <img src="{{ "svg/calendar.svg" | relURL }}" class="book-icon" alt="Calendar" />
       <span>{{ $date }}</span>
-    </a>
-  </div>
-{{ end }}
-
