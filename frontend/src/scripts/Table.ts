@@ -4,3 +4,10 @@ interface Attrs {
 	tableClass?: string
 	thead?: m.Children
 	tfoot?: m.Children
+}
+
+const Table: m.Component<Attrs> = {
+	view(vnode: m.VnodeDOM<Attrs>): m.Children {
+		const haveRows = Array.isArray(vnode.children) ? vnode.children.length > 0 : vnode.children != null
+
+		return haveRows && m(

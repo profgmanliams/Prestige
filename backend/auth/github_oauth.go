@@ -163,3 +163,85 @@ func HandleGithubAuthCallback(ctx context.Context, ex *exchange.Exchange) {
 				  viewer {
 					databaseId
 					id
+					login
+					avatarURL: avatarUrl
+					email
+				  }
+				}`,
+		},
+		Headers: map[string]string{
+			"Accept":        "application/vnd.github.v3+json",
+			"Authorization": "Bearer " + oAuthVerifyResponse.AccessToken,
+		},
+	})
+	if err != nil {
+		if response != nil {
+			log.Printf("Error response from Github user details request: %v %s", response, string(response.Body))
+			ex.RespondErrorDeprecated(http.StatusUnauthorized, errors.New("Github oauth verification failed"))
+		} else {
+			log.Printf("Error doing Github user details request: %v", err)
+			ex.RespondErrorDeprecated(http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	userDetailsResponse := UserDetailsResponse{}
+	err = json.Unmarshal(response.Body, &userDetailsResponse)
+	if err != nil {
+		log.Printf("Error unmarshalling response body from recaptcha verification request: %v %v", err, string(response.Body))
+		ex.RespondErrorDeprecated(http.StatusUnauthorized, errors.New("error unmarshalling user details response"))
+		return
+	}
+
+	gitHubUserId := userDetailsResponse.Data.Viewer.Id
+
+	response, err = ex.HTTPDo(httpclient.Request{
+		Method: http.MethodGet,
+		URL:    "https://api.github.com/user/emails",
+		Headers: map[string]string{
+			"Accept":        "application/vnd.github.v3+json",
+			"Authorization": "token " + oAuthVerifyResponse.AccessToken,
+		},
+	})
+	if err != nil {
+		if response != nil {
+			log.Printf("Error response getting emails from Github: %v", err)
+			ex.RespondErrorDeprecated(http.StatusUnauthorized, errors.New("getting emails from Github failed"))
+		} else {
+			log.Printf("Error getting emails from Github: %v", err)
+			ex.RespondErrorDeprecated(http.StatusInternalServerError, err)
+		}
+		return
+	}
+
+	var userEmailsResponse []UserEmailsResponse
+	err = json.Unmarshal(response.Body, &userEmailsResponse)
+	if err != nil {
+		log.Printf("Error unmarshalling response body from recaptcha verification request: %v %v", err, string(response.Body))
+		ex.RespondErrorDeprecated(http.StatusUnauthorized, errors.New("cannot unmarshal emails response from Github"))
+		return
+	}
+
+	var primaryEmailResponse *UserEmailsResponse
+	for _, resp := range userEmailsResponse {
+		if resp.IsPrimary {
+			primaryEmailResponse = &resp
+			break
+		}
+	}
+
+	if primaryEmailResponse == nil {
+		log.Printf("No primary email in Github: %v", string(response.Body))
+		ex.RespondErrorDeprecated(http.StatusUnauthorized, errors.New("no primary email"))
+		return
+	}
+
+	if !primaryEmailResponse.IsVerified {
+		log.Printf("Primary email isn't verified on Github: %v", string(response.Body))
+		ex.RespondErrorDeprecated(http.StatusUnauthorized, errors.New("primary email isn't verified"))
+		return
+	}
+
+	encryptedToken, err := utils.Encrypt(ex.Config.EncryptionKey, oAuthVerifyResponse.AccessToken)
+	if err != nil {
+		log.Printf("Error encrypting access token: %v", err)
