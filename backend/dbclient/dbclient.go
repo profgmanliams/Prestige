@@ -98,3 +98,53 @@ func mustCreateUniqueIndex(ctx context.Context, collection *mongo.Collection, in
 }
 
 func mustCreateIndex(
+	ctx context.Context,
+	collection *mongo.Collection,
+	indexName string,
+	keys bson.A,
+	indexOptions *options.IndexOptions,
+) {
+	keysMap := bson.M{}
+	for _, key := range keys {
+		keysMap[key.(string)] = 1
+	}
+
+	indexOptions.Name = &indexName
+
+	usersIndexes := collection.Indexes()
+	_, err := usersIndexes.CreateOne(ctx, mongo.IndexModel{
+		Keys:    keysMap,
+		Options: indexOptions,
+	})
+	if err != nil {
+		log.Panicf("Error creating %q index: %v", indexName, err)
+	}
+}
+
+func (db *Impl) Close() error {
+	return db.NativeDatabase.Client().Disconnect(context.Background())
+}
+
+func (db *Impl) CreateUser(ctx context.Context, user User) error {
+	user.CreatedAt = time.Now().UTC()
+
+	insertResult, err := db.NativeDatabase.Collection("users").InsertOne(ctx, user)
+	if err != nil {
+		log.Printf("Error inserting request to MongoDB: %v", err)
+		return err
+	}
+
+	if insertResult.InsertedID == nil {
+		return fmt.Errorf("error inserting user to MongoDB, no ID returned")
+	}
+
+	return nil
+}
+
+func (db *Impl) FindUserByEmail(ctx context.Context, email string) (*User, error) {
+	user := &User{}
+
+	err := db.NativeDatabase.Collection("users").FindOne(ctx, bson.M{"email": email}).Decode(user)
+	if err != nil {
+		if err != mongo.ErrNoDocuments {
+			log.Printf("Error finding user by email: %q; %v", email, err)
