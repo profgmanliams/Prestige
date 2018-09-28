@@ -1,0 +1,121 @@
+html {
+  font-size: $font-size-base;
+  scroll-behavior: smooth;
+  touch-action: manipulation;
+}
+
+body {
+  min-width: $body-min-width;
+  color: var(--body-font-color);
+  background: var(--body-background);
+
+  letter-spacing: 0.33px;
+  font-weight: $body-font-weight;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  box-sizing: border-box;
+  * {
+    box-sizing: inherit;
+  }
+}
+
+h1,
+h2,
+h3,
+h4,
+h5 {
+  font-weight: $body-font-weight;
+}
+
+a {
+  text-decoration: none;
+  color: var(--color-link);
+}
+
+img {
+  vertical-align: baseline;
+}
+
+:focus {
+  @include outline;
+}
+
+aside nav ul {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li {
+    margin: 1em 0;
+    position: relative;
+  }
+
+  a {
+    display: block;
+  }
+
+  a:hover {
+    opacity: 0.5;
+  }
+
+  ul {
+    padding-inline-start: $padding-16;
+  }
+}
+
+ul.pagination {
+  display: flex;
+  justify-content: center;
+  list-style-type: none;
+  padding-inline-start: 0px;
+
+  .page-item a {
+    padding: $padding-16;
+  }
+}
+
+.container {
+  max-width: $container-max-width;
+  margin: 0 auto;
+}
+
+.book-icon {
+  filter: var(--icon-filter);
+}
+
+.book-brand {
+  margin-top: 0;
+  margin-bottom: $padding-16;
+
+  img {
+    height: 1.5em;
+    width: 1.5em;
+    margin-inline-end: $padding-8;
+  }
+}
+
+.book-menu {
+  flex: 0 0 $menu-width;
+  font-size: $font-size-14;
+
+  .book-menu-content {
+    width: $menu-width;
+    padding: $padding-16;
+    background: var(--body-background);
+
+    @include fixed;
+  }
+
+  a,
+  label {
+    color: inherit;
+    cursor: pointer;
+    word-wrap: break-word;
+  }
+
+  a.active {
+    color: var(--color-link);
+  }
+
