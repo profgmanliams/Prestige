@@ -59,3 +59,24 @@ export class Exporter {
 			tokens.push(spaceToken, [`'${name.replace(/\b\w/g, (c) => c.toUpperCase())}: ${value}'`, "string"])
 		}
 
+		if (this.request.body !== "" && this.request.body != null) {
+			tokens.push(newLineToken, [useLongFlags ? "--data" : "-d", "variable"])
+			tokens.push(spaceToken, ["'" + this.request.body.replace(/'/g, "'\"'\"'") + "'", "string"])
+		}
+
+		console.log("cookies", new URL(this.request.url).hostname, this.cookieJar, this.cookieJar != null)
+		if (includeCookies && this.cookieJar != null) {
+			const domainCookies = this.cookieJar.store[new URL(this.request.url).hostname]
+			console.log("domainCookies", domainCookies)
+			if (domainCookies != null) {
+				const cookieParts: string[] = []
+				for (const byName of Object.values(domainCookies)) {
+					for (const [name, morsel] of Object.entries(byName)) {
+						cookieParts.push(name + "=" + morsel.value)
+					}
+				}
+				if (cookieParts.length > 0) {
+					tokens.push(
+						newLineToken,
+						[useLongFlags ? "--cookie" : "-b", "variable"],
+						spaceToken,
