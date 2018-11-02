@@ -14,9 +14,3 @@
       {{- .Pre -}}
       {{ with .Page }}
         {{ partial "docs/title" .Page }}
-      {{ else }}
-        {{ .Name }}
-      {{ end }}
-      {{- .Post -}}
-    </a>
-    {{- with .Children }}
