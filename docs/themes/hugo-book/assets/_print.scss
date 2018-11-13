@@ -2,3 +2,11 @@
   .book-menu,
   .book-footer,
   .book-toc {
+    display: none;
+  }
+
+  .book-header,
+  .book-header aside {
+    display: block;
+  }
+
