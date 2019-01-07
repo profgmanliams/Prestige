@@ -37,3 +37,42 @@
   h6 {
     font-weight: bolder;
   }
+
+  h5 {
+    font-size: 0.875em;
+  }
+
+  h6 {
+    font-size: 0.75em;
+  }
+
+  b,
+  optgroup,
+  strong {
+    font-weight: bolder;
+  }
+
+  a {
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+    &:visited {
+      color: var(--color-visited-link);
+    }
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  code {
+    padding: 0 $padding-4;
+    background: var(--gray-200);
+    border-radius: $border-radius;
+    font-size: 0.875em;
+  }
+
+  pre {
