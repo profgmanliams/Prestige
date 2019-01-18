@@ -142,3 +142,51 @@ ensure-hugo() {
 		popd
 	fi
 }
+
+###
+# UI Tests
+###
+
+test-ui() {
+	build-all
+	cd ui-tests
+	if [[ package.json -nt yarn.lock ]]; then
+		if [[ -n ${CI-} ]]; then
+			echo 'Yarn lock file is older than package.json, failing CI.' >&2
+			exit 1
+		else
+			yarn install
+		fi
+	elif [[ -n ${CI-} ]]; then
+		yarn install --frozen-lockfile
+	fi
+
+	yarn playwright install --with-deps
+
+	cp -v ../prestige .
+
+	docker compose -f ../backend/docker-compose.yaml pull
+	docker compose -f ../backend/docker-compose.yaml up -d
+
+	n=4
+	while [[ $n -gt 0 ]]; do
+		if docker compose -f ../backend/docker-compose.yaml exec mongo mongosh "mongodb://user:pass@localhost/ui-tests?authSource=admin" --quiet --eval "$(cat ../backend/apitests/mongodb-test-data.js)"; then
+			break
+		fi
+		sleep 3
+		n=$((n - 1))
+	done
+
+	DEBUG=pw:webserver yarn playwright test
+}
+
+###
+# Miscellaneous / Project-wide targets
+###
+
+build-all() (
+	build-frontend
+	rm -rf backend/assets/static
+	mv frontend/dist backend/assets/static
+	build-docs
+	mv docs/public backend/assets/static/docs
