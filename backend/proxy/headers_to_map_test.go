@@ -21,11 +21,3 @@ func TestHeadersToMap(t *testing.T) {
 	if diff := cmp.Diff(want, got); diff != "" {
 		t.Errorf("headersToMap() returned diff: %s", diff)
 	}
-}
-
-func TestHeadersToMapDuplicatedEntries(t *testing.T) {
-	got := headersToMap([][]string{
-		{"header-one", "value-one"},
-		{"header-one", "one-again"},
-	})
-
