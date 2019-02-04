@@ -29,3 +29,13 @@ X-Custom2: custom header value two
 // This is a Javascript block, so comments start with '//'.
 // The following will be available for templating in requests *after* this Javascript block.
 // Learn more at ${window.location.origin}/docs/guides/javascript-blocks/.
+this.data.postUrl = "post"
+
+###
+
+# Let's use templates to make the same POST request as before!
+# Learn more at: ${window.location.origin}/docs/guides/templating/.
+POST https://httpbun.com/${postUrl}
+Content-Type: application/x-www-form-urlencoded
+
+username=sherlock&password=elementary
