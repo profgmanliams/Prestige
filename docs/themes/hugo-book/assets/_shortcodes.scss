@@ -50,3 +50,29 @@
       width: 100%;
       border-top: $padding-1 solid var(--gray-100);
       padding: $padding-16;
+      display: none;
+    }
+
+    input[type="radio"]:checked + label {
+      border-bottom: $padding-1 solid var(--color-link);
+    }
+    input[type="radio"]:checked + label + .book-tabs-content {
+      display: block;
+    }
+    input[type="radio"]:focus + label {
+      @include outline;
+    }
+  }
+
+  // {{< columns >}}
+  .book-columns {
+    margin-left: -$padding-16;
+    margin-right: -$padding-16;
+
+    > div {
+      margin: $padding-16 0;
+      min-width: $body-min-width / 2;
+      padding: 0 $padding-16;
+    }
+  }
+
