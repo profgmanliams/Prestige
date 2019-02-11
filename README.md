@@ -52,3 +52,21 @@ Run the serve commands in parallel, then open <http://localhost:3040>.
 
 - HTTP Client for Sublime Text: [Requester](https://github.com/kylebebak/Requester).
 - HTTP Client for VS Code: [vscode-restclient](https://github.com/Huachao/vscode-restclient).
+- REST Client for IntelliJ based
+  IDEs: [JetBrains HTTP Client](https://www.jetbrains.com/help/idea/http-client-in-product-code-editor.html).
+- My own Vim extension towards a very similar concept: [roast.vim](https://github.com/sharat87/roast.vim).
+
+More: <https://github.com/marmelab/awesome-rest>.
+
+## Some public APIs to play with
+
+1. [httpbun.com](https://httpbun.com) &mdash; Great for meta-testing and JSON/form-data related experiments. Another
+   project by [@sharat87](https://sharats.me).
+2. [A collective list of free APIs for use in software and web development](https://github.com/public-apis/public-apis).
+3. Yahoo Finance stock prices API &mdash; Great for large text responses and CSV data.
+4. GitHub GraphQL API &mdash; Great for experimenting with GraphQL, but requires a personal auth token.
+5. [A Curated List of 100 Cool and Fun Public APIs to Inspire Your Next Project](https://medium.com/better-programming/a-curated-list-of-100-cool-and-fun-public-apis-to-inspire-your-next-project-7600ce3e9b3)
+6. [Postman's collection](https://www.postman.com/cs-demo/workspace/public-rest-apis/collection/8854915-454a2dc7-dcbe-41cf-9bfa-da544fcd93a2)
+
+## Rough Roadmap
+
