@@ -64,3 +64,25 @@ export default class Context {
 		return (promises.length === 0 ? Promise.resolve() : Promise.all(promises)).finally(m.redraw)
 	}
 
+	fileFromBucket(fileName: string): Promise<MultiPartFormValue> {
+		return this.fileBucket == null
+			? Promise.reject(new Error("File bucket not available in this context"))
+			: this.fileBucket.load(fileName)
+	}
+
+	multipart(data: Record<string, string | MultiPartFormValue>): MultiPartForm {
+		const formData = new MultiPartForm()
+		for (const [key, value] of Object.entries(data)) {
+			formData.set(key, value)
+		}
+		return formData
+	}
+
+	basicAuth(username: string, password: string): string {
+		return "Basic " + btoa(username + ":" + password)
+	}
+
+	toast(type: unknown, message?: unknown): void {
+		if (arguments.length < 2) {
+			message = type
+			type = "success"
