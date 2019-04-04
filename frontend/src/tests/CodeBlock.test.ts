@@ -20,3 +20,14 @@ test("CodeBlock json", async () => {
 	const el = root.querySelector("pre")
 	expect(el).toBeDefined()
 	if (el == null) {
+		return
+	}
+	expect(getCodeTags(el))
+		.toStrictEqual([
+			["SPAN", "1"],
+			["SPAN", "{"],
+			["SPAN", ""],
+			["SPAN", "\n"],
+			["SPAN", "2"],
+			["SPAN", "  "],
+			["SPAN", "\"key\""],

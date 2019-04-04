@@ -13,3 +13,18 @@ test("execute direct get", async () => {
 	mockedRequestFn.mockResolvedValue({
 		status: 200,
 		statueText: "OK",
+		url: "http://httpbun.com/get?first=first-value",
+		headers: [],
+		body: "response body",
+	})
+
+	expect(workspace instanceof Workspace).toBeTruthy()
+
+	const result = await workspace.execute({
+		method: "GET",
+		url: "http://httpbun.com/get?first=first-value",
+		bodyType: "raw",
+		body: "",
+		headers: new Headers(),
+	}, null)
+
