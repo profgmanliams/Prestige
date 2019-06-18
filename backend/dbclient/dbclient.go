@@ -148,3 +148,53 @@ func (db *Impl) FindUserByEmail(ctx context.Context, email string) (*User, error
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
 			log.Printf("Error finding user by email: %q; %v", email, err)
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (db *Impl) UpdateUser(ctx context.Context, filter bson.M, updates bson.M) (*mongo.UpdateResult, error) {
+	updateResult, err := db.NativeDatabase.Collection("users").UpdateOne(
+		ctx,
+		filter,
+		bson.M{
+			"$set": updates,
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return updateResult, nil
+}
+
+func (db *Impl) CreateSession(ctx context.Context, session SessionDTO) error {
+	session.CreatedAt = time.Now().UTC()
+	session.ExpiresAt = session.CreatedAt.Add(time.Hour * 24 * 7)
+
+	insertResult, err := db.NativeDatabase.Collection("sessions").InsertOne(ctx, session)
+	if err != nil {
+		return err
+	}
+
+	if insertResult.InsertedID == nil {
+		return fmt.Errorf("error inserting user to MongoDB, no ID returned")
+	}
+
+	return nil
+}
+
+func (db *Impl) UpdateSession(ctx context.Context, sid string, updates map[string]any) error {
+	updates["expiresAt"] = time.Now().UTC().Add(time.Hour * 24 * 7)
+
+	updateResult, err := db.NativeDatabase.Collection("sessions").UpdateOne(
+		ctx,
+		bson.M{
+			"sid": sid,
+		},
+		bson.M{
+			"$set": updates,
+		},
+	)
