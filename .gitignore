@@ -3,14 +3,3 @@
 node_modules
 
 /backend/assets/static
-
-/frontend/dist
-/frontend/dist-*
-/frontend/coverage
-
-/ui-tests/prestige
-/ui-tests/test-results/
-/ui-tests/playwright-report/
-
-/docs/public
-/docs/hugo
