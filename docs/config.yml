@@ -2,8 +2,3 @@ title: Prestige Docs
 
 baseURL: https://prestige.dev/docs/
 languageCode: en-us
-
-theme: hugo-book
-
-params:
-  BookTheme: auto
