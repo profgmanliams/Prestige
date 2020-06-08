@@ -10,15 +10,3 @@ console.log("backendTarget", backendTarget)
 const DOCS_PORT = parseInt(process.env.DOCS_PORT || 3042, 10)
 
 module.exports = function (app) {
-
-	app.use(createProxyMiddleware(
-		[
-			"/auth",
-			"/env",
-			"/gist",
-			"/health",
-			"/proxy",
-		],
-		{
-			target: backendTarget,
-		},
