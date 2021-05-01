@@ -16,22 +16,3 @@ type Config struct {
 	ProxyDisallowedPrefixes []netip.Prefix
 }
 
-func MustLoad() Config {
-	target := loadBindTarget()
-	hosts, prefixes := loadProxyDisallowedHosts()
-	return Config{
-		BindTarget:              target,
-		AllowedHosts:            loadAllowedHosts(),
-		EncryptionKey:           *(*[32]byte)(loadEncryptionKey()),
-		ProxyDisallowedHosts:    hosts,
-		ProxyDisallowedPrefixes: prefixes,
-	}
-}
-
-func loadBindTarget() string {
-	if port, ok := os.LookupEnv("PORT"); ok {
-		return ":" + port
-	} else {
-		return ":3041"
-	}
-}
