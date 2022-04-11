@@ -9,4 +9,4 @@ chapter: true
 
 # Self-host 
 
-We are continuously developing the server, if you have any comments, please join our [Discord](https://discord.com/invite/nDceKgxnkV) discussion.
+Estamos continuamente desenvolvendo o servidor, se você tiver algum comentário, participe da nossa discussão [Discord](https://discord.com/invite/nDceKgxnkV).
