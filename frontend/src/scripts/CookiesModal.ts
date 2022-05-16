@@ -33,38 +33,3 @@ function view(vnode: VnodeDOM<Attrs>): m.Children {
 							{
 								class: "compact danger-light",
 								// TODO: Cookie jar is not saved after deletion here.
-								onclick: () => vnode.attrs.workspace.deleteCookie(domain, path, name),
-							},
-							"Del",
-						),
-					]),
-				]))
-			}
-		}
-	}
-
-	return m(
-		ModalManager.DrawerLayout,
-		{
-			title: "Cookies",
-			footerLeft: cookieJar != null && cookieJar.size > 0 ? m(
-				Button,
-				{ class: "danger-light t-cookies-clear-all-btn", onclick: () => cookieJar.clear() },
-				"Clear all cookies",
-			) : m("div"),
-		},
-		[
-			rows.length === 0 ? m("p.t-cookies-empty", "No cookies in your jar!") : m(
-				Table,
-				{
-					tableClass: "t-cookies-table",
-					thead: m("tr", [
-						m("th", "#"),
-						m("th", "Domain"),
-						m("th", "Path"),
-						m("th", "Name"),
-						m("th", "Value"),
-						m("th", "Expires"),
-						m("th", "Actions"),
-					]),
-					/* TODO: UI in table footer to manually add a new cookie.
