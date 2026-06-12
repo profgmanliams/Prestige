@@ -1,0 +1,60 @@
+name: "Test, build and package"
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches:
+      - "master"
+
+jobs:
+  all:
+    timeout-minutes: 15
+    runs-on: "ubuntu-latest"
+
+    steps:
+      - uses: "actions/checkout@v3"
+
+      - name: "Setup Go"
+        uses: "actions/setup-go@v3"
+        with:
+          go-version: "^1.18.3"
+
+      - name: "Setup Node"
+        uses: "actions/setup-node@v3"
+        with:
+          node-version: 16
+          cache: "yarn"
+          cache-dependency-path: "frontend/yarn.lock"
+
+      - name: "Lint and test backend"
+        run: |
+          ./manage.sh lint-backend
+          ./manage.sh test-backend
+
+      - name: "Lint and test frontend"
+        run: |
+          ./manage.sh lint-frontend
+          ./manage.sh test-frontend
+
+      #- name: "UI Tests"
+      #  run: |
+      #    ./manage.sh test-ui
+
+      - name: "Upload test results"
+        uses: "actions/upload-artifact@v2"
+        if: always()
+        with:
+          name: "ui-results-${{ github.sha }}"
+          path: ui-tests/playwright-report/
+
+      - name: Push Docker image to GHCR
+        if: |
+          success() && github.event_name == 'push' && github.ref == 'refs/heads/master'
+        run: |
+          ./manage.sh build-for-docker
+          docker build -t ghcr.io/${{ github.actor }}/prestige:latest .
+          docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
+          docker push --all-tags ghcr.io/${{ github.actor }}/prestige
