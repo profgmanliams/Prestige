@@ -45,3 +45,51 @@ export default function Sidebar(): m.Component<Attrs> {
 				isDev() && m(".grip", {
 					title: "Resize the sidebar",
 					onmousedown: onMouseDown,
+				}),
+			],
+		])
+	}
+
+	function tabLink(tooltip: string, pane: PaneType, icon: m.Component): m.Children {
+		return m(
+			NavLink,
+			{
+				tooltip,
+				tooltipDir: "right",
+				isActive: currentPane === pane,
+				onclick() {
+					currentPane = currentPane === pane ? null : pane
+				},
+			},
+			m(icon),
+		)
+	}
+
+	function onMouseDown(event: MouseEvent): void {
+		// The actual width may be different from the `currentWidth` due to CSS based limits like `max-width`.
+		dragStartWidth =
+			(event.target as HTMLDivElement)?.parentElement?.querySelector<HTMLElement>(".content")?.offsetWidth
+				?? currentWidth
+		dragStartClientX = event.clientX
+		// Disable text selection so that text doesn't get randomly selected while dragging the resize grip.
+		document.body.style.userSelect = "none"
+		document.body.style.cursor = "ew-resize"
+		document.body.addEventListener("mousemove", onBodyMouseMove)
+		document.body.addEventListener("mouseup", onBodyMouseUp)
+	}
+
+	function onBodyMouseMove(event: MouseEvent): void {
+		currentWidth = dragStartWidth + event.clientX - dragStartClientX
+		// Call redraw manually here since this event handler is not bound by Mithril.
+		m.redraw()
+	}
+
+	function onBodyMouseUp(): void {
+		document.body.style.userSelect = document.body.style.cursor = ""
+		document.body.removeEventListener("mousemove", onBodyMouseMove)
+		document.body.removeEventListener("mouseup", onBodyMouseUp)
+		// Call redraw manually here since this event handler is not bound by Mithril.
+		m.redraw()
+	}
+
+}

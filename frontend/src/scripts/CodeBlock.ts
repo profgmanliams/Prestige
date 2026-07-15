@@ -120,3 +120,125 @@ function renderTokens(fullText: string, mode: CodeMirror.Mode<unknown>): m.Child
 					isClosed: false,
 				})
 			}
+			prevNewLineIndex = rows.push(tokenSpan) - 1
+			col = 0
+
+			const lineNumEl = m("span.line-nums", lineNumEls.length + 1)
+			lineNumEls.push(lineNumEl)
+			rows.push(lineNumEl)
+
+		} else {
+			let content = ""
+
+			// Replace tabs
+			for (let pos = 0;;) {
+				const idx = text.indexOf("\t", pos)
+				if (idx === -1) {
+					content += text.slice(pos)
+					col += text.length - pos
+					break
+				} else {
+					col += idx - pos
+					content += text.slice(pos, idx)
+					const size = tabSize - col % tabSize
+					col += size
+					content += repeat(" ", size).join("")
+					pos = idx + 1
+				}
+			}
+
+			const tokenSpan = style == null ?
+				m("span", content) :
+				m("span", { class: "cm-" + style.replace(/ +/g, " cm-") }, content)
+
+			rows.push(tokenSpan)
+
+			if (nestingStack.length > 0) {
+				if ((text === "}" && prevTokenText !== "{") || (text === "]" && prevTokenText !== "[")) {
+					const stackItem = nestingStack[nestingStack.length - 1]
+					if (stackItem != null) {
+						stackItem.isClosed = true
+						stackItem.commentEl.text = stackItem.count > 2 ? `${stackItem.count} items` : ""
+					}
+				} else if (text === ",") {
+					++nestingStack[nestingStack.length - 1].count
+				}
+			}
+
+		}
+
+		prevTokenText = text
+
+	})
+
+	let i = 1
+	const gutterWidth = lineNumEls.length.toString().length
+	for (const lineNumEl of lineNumEls) {
+		lineNumEl.text = padStart(i.toString(), gutterWidth, " ")
+		++i
+	}
+
+	return rows
+
+}
+
+function asString(text: unknown, spec?: string): string {
+	if (text == null) {
+		return ""
+	} else if (typeof text !== "string") {
+		return JSON.stringify(text, null, 2)
+	} else {
+		return spec == null ? text : prettify(text, spec)
+	}
+}
+
+function prettify(text: string, spec?: string) {
+	const language = spec == null ? null : spec.split("/", 2)[1]
+
+	if (language === "json") {
+		return prettifyJson(text)
+	}
+
+	return text
+}
+
+function prettifyJson(json: string) {
+	try {
+		return JSON.stringify(JSON.parse(json), null, 2)
+	} catch (error) {
+		// TODO: The fact that this JSON is invalid should be communicated to the user.
+		console.error("Error parsing/prettifying JSON.", json)
+		return json
+	}
+}
+
+// Code taken from the official runMode addon of CodeMirror.
+function runMode(
+	inputText: string,
+	mode: CodeMirror.Mode<unknown>,
+	callback: ((text: string, style: string | null) => void),
+): void {
+	const lines = CodeMirror.splitLines(inputText)
+	const state = CodeMirror.startState(mode)
+	for (let i = 0, e = lines.length; i < e; ++i) {
+		if (i) {
+			callback("\n", null)
+		}
+		const stream = new (CodeMirror as any).StringStream(lines[i], null, {
+			lookAhead(n: number) {
+				return lines[i + n]
+			},
+			baseToken() {
+				return null
+			},
+		})
+		if (!stream.inputText && mode.blankLine) {
+			mode.blankLine(state)
+		}
+		while (!stream.eol()) {
+			const style = mode.token(stream, state)
+			callback(stream.current(), style /*, i, stream.start, state */)
+			stream.start = stream.pos
+		}
+	}
+}
