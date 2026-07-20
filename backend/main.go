@@ -25,3 +25,85 @@ func main() {
 	logMetaInformation()
 	cfg := config.MustLoad()
 
+	listener, err := net.Listen("tcp", cfg.BindTarget)
+	if err != nil {
+		log.Panicf("Error creating listener: %v", err)
+	}
+
+	m := mux.New()
+	defer func(m *mux.Mux) {
+		err := m.Close()
+		if err != nil {
+			log.Println("Error closing mux:", err)
+		}
+	}(m)
+
+	if uri := os.Getenv("PRESTIGE_DATABASE_URI"); uri != "" {
+		m.UseDBClient(dbclient.New(context.TODO(), uri))
+	}
+
+	m.UseConfig(cfg)
+
+	m.UseHTTPClient(httpclient.New())
+
+	// TODO: Prefix all environment variables with `PRESTIGE_`.
+	if os.Getenv("RECAPTCHA_PROJECT_ID") != "" {
+		log.Print("Recaptcha enabled")
+		m.UseRecaptcha(
+			os.Getenv("RECAPTCHA_PROJECT_ID"),
+			os.Getenv("RECAPTCHA_SITE_KEY"),
+			os.Getenv("RECAPTCHA_API_KEY"),
+		)
+	}
+
+	if os.Getenv("GITHUB_CLIENT_ID") != "" {
+		log.Print("Github Client enabled")
+		m.UseGitHubClient(
+			os.Getenv("GITHUB_CLIENT_ID"),
+			os.Getenv("GITHUB_CLIENT_SECRET"),
+		)
+	}
+
+	s := &http.Server{
+		Handler:        m,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 10,
+	}
+
+	log.Printf("Serving on http://%s...", cfg.BindTarget)
+
+	err = s.Serve(listener)
+	if err != nil {
+		log.Panicf("Server returned error: %v", err)
+	}
+}
+
+func logMetaInformation() {
+	var commit string
+	var isCommitClean bool
+
+	buildInfo, ok := debug.ReadBuildInfo()
+	if !ok {
+		log.Println("Could not read build information")
+
+	} else {
+		for _, setting := range buildInfo.Settings {
+			if setting.Key == "vcs.revision" {
+				commit = setting.Value
+			} else if setting.Key == "vcs.modified" {
+				isCommitClean = setting.Value == "false"
+			}
+		}
+
+	}
+
+	if !isCommitClean {
+		if commit != "" {
+			commit += " "
+		}
+		commit += "(dirty)"
+	}
+
+	log.Printf("Version: %q, Commit: %q, Built: %q", Version, commit, BuildTime)
+}
