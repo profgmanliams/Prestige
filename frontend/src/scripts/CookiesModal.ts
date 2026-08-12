@@ -33,3 +33,73 @@ function view(vnode: VnodeDOM<Attrs>): m.Children {
 							{
 								class: "compact danger-light",
 								// TODO: Cookie jar is not saved after deletion here.
+								onclick: () => vnode.attrs.workspace.deleteCookie(domain, path, name),
+							},
+							"Del",
+						),
+					]),
+				]))
+			}
+		}
+	}
+
+	return m(
+		ModalManager.DrawerLayout,
+		{
+			title: "Cookies",
+			footerLeft: cookieJar != null && cookieJar.size > 0 ? m(
+				Button,
+				{ class: "danger-light t-cookies-clear-all-btn", onclick: () => cookieJar.clear() },
+				"Clear all cookies",
+			) : m("div"),
+		},
+		[
+			rows.length === 0 ? m("p.t-cookies-empty", "No cookies in your jar!") : m(
+				Table,
+				{
+					tableClass: "t-cookies-table",
+					thead: m("tr", [
+						m("th", "#"),
+						m("th", "Domain"),
+						m("th", "Path"),
+						m("th", "Name"),
+						m("th", "Value"),
+						m("th", "Expires"),
+						m("th", "Actions"),
+					]),
+					/* TODO: UI in table footer to manually add a new cookie.
+					   tfoot: m("tr", [
+					   m("td", "+"),
+					   m("td", m("input")),
+					   m("td", m("input")),
+					   m("td", m("input")),
+					   m("td", m("input")),
+					   m("td", m("input")),
+					   m("td", m(
+					   Button,
+					   { class: "bg-washed-green dark-green hover-bg-dark-green hover-washed-green" },
+					   "Add",
+					   )),
+					   ]), */
+				},
+				rows,
+			),
+			m("p.info", "These cookies will be used for requests" +
+				" executed by proxy only. For requests that are executed without a proxy, please refer to the browser" +
+				" console. This is a browser-level security restriction."),
+		],
+	)
+}
+
+const TimeView: m.Component<{ time: null | string | number }> = {
+	view(vnode) {
+		const time = vnode.attrs.time
+		if (time == null) {
+			return m("em", "n/a")
+		} else if (typeof time === "string") {
+			return time
+		} else {
+			return new Date((time.toString().length < 12 ? 1000 : 1) * time).toString()
+		}
+	},
+}
