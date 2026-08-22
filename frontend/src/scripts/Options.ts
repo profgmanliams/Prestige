@@ -68,3 +68,143 @@ function load<T>(name: string): null | T {
 function save<T>(name: string, value: T): void {
 	const valueString: string = JSON.stringify(value)
 
+	if (valueString === load(name)) {
+		return
+	}
+
+	localStorage.setItem(PREFIX + name, valueString)
+}
+
+function saver<T>(name: string): ((value: T) => void) {
+	return (value: T) => save(name, value)
+}
+
+function initOption<T>(stream: Stream<T>, name: string, defaultValue: T): void {
+	stream(load(name) ?? defaultValue)
+	stream.map(saver<T>(name))
+}
+
+export default function OptionsModal(): m.Component<{ doClose: () => void}> {
+	return { view }
+
+	function view() {
+		return [
+			m("h2.pa2", "Options"),
+			m("p.pa1", [
+				m(".b.pb1", "Dark Mode"),
+				m(".flex", [
+					m("label.flex", { title: "Sync to system's dark mode setting." }, [
+						m("input", {
+							type: "radio",
+							name: "displayMode",
+							value: "auto",
+							checked: displayModeOption() === "auto",
+							onchange: () => displayModeOption("auto"),
+						}),
+						m(".ml1", "System"),
+					]),
+					m("label.flex.ml3", { title: "Always use light mode." }, [
+						m("input", {
+							type: "radio",
+							name: "displayMode",
+							value: "light",
+							checked: displayModeOption() === "light",
+							onchange: () => displayModeOption("light"),
+						}),
+						m(".ml1", "Light"),
+					]),
+					m("label.flex.ml3", { title: "Always use dark mode." }, [
+						m("input", {
+							type: "radio",
+							name: "displayMode",
+							value: "dark",
+							checked: displayModeOption() === "dark",
+							onchange: () => displayModeOption("dark"),
+						}),
+						m(".ml1", "Dark"),
+					]),
+				]),
+			]),
+			m("p.pa1", [
+				m(".b.pb1", "Color Scheme"),
+				m(
+					"select",
+					{
+						value: paletteOption(),
+						onchange(event: Event) {
+							paletteOption((event.target as HTMLInputElement).value)
+						},
+					},
+					[
+						m("option", { value: "base16" }, "Base 16"),
+						m("option", { value: "mono" }, "Mono"),
+						m("option", { value: "tomorrow" }, "Tomorrow"),
+						m("option", { value: "solarized" }, "Solarized"),
+					],
+				),
+			]),
+			m("p.pa1", [
+				m(".b.pb1", "Editor Font"),
+				m(
+					"select",
+					{
+						value: editorFontOption(),
+						onchange(event: Event) {
+							editorFontOption((event.target as HTMLInputElement).value)
+						},
+					},
+					[
+						m("option", { value: "Source Code Pro" }, "Source Code Pro (Default)"),
+						m("option", { value: "Consolas" }, "Consolas"),
+						m("option", { value: "Monaco" }, "Monaco"),
+						m("option", { value: "default" }, "Browser Default"),
+					],
+				),
+			]),
+			m("p.pa1", [
+				m(".b.pb1", "Editor Font Size"),
+				m(
+					"input",
+					{
+						type: "number",
+						value: editorFontSizeOption(),
+						oninput(event: Event) {
+							editorFontSizeOption((event.target as HTMLInputElement).value)
+						},
+					},
+				),
+			]),
+			m("p.pa1", [
+				m(".b.pb1", "Import from prestigemad.com"),
+				m("p.mt0", "If you've been a user on our old domain, prestigemad.com, and have exported your data there, you can import using the form below:"),
+				m(
+					"input",
+					{
+						type: "file",
+						accept: ".json",
+					},
+				),
+				m("button", {
+					onclick(event: MouseEvent) {
+						const fileInput = (event.target as HTMLButtonElement).previousElementSibling as HTMLInputElement
+						const file = fileInput.files?.[0]
+						if (file == null) {
+							return
+						}
+						const reader = new FileReader()
+						reader.addEventListener("load", (event1) => {
+							const content = (event1.target as FileReader).result as string
+							const data = JSON.parse(content)
+							for (const [key, value] of Object.entries(data)) {
+								localStorage.setItem(key, value as string)
+							}
+							window.location.reload()
+						})
+						reader.readAsText(file)
+					},
+				}, "Import!"),
+			]),
+		]
+	}
+
+}

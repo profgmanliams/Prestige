@@ -4,3 +4,31 @@
 		"esModuleInterop": true,
 		"strictNullChecks": true,
 		"strictPropertyInitialization": true,
+		"skipLibCheck": true,
+		"allowJs": true,
+		"moduleResolution": "Node",
+		"noImplicitAny": true,
+		"lib": [
+			"DOM",
+			"DOM.Iterable",
+			"ES6",
+			"ES2015.Core",
+			"ES2015.Collection",
+			"ES2017",
+			"ES2018.Promise"
+		],
+		"types": [
+			"jest"
+		],
+		"baseUrl": ".",
+		"paths": {
+			"_/*": ["./src/scripts/*"]
+		},
+		"sourceMap": true
+	},
+	"include": [
+		"src/scripts/*",
+		"src/tests/*",
+		"src/custom.d.ts"
+	]
+}
