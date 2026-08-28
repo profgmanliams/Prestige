@@ -87,3 +87,92 @@ func (ex Exchange) HTTPDo(request httpclient.Request) (*httpclient.Response, err
 }
 
 func (ex *Exchange) InitSession(ctx context.Context) *dbclient.SessionDTO {
+	cookie, err := ex.Request.Cookie("prestige_sid")
+	sid := ""
+
+	if err == nil && cookie.Value != "" {
+		sid = cookie.Value
+		ex.Session = ex.DBClient.FindSession(ctx, sid)
+	}
+
+	if err != nil && err != http.ErrNoCookie {
+		log.Printf("Error getting prestige_sid cookie: %v", err)
+	}
+
+	if ex.Session == nil || ex.Session.Sid == "" {
+		sid, err := utils.GenerateRandomString()
+		if err != nil {
+			log.Printf("Error generating random string: %v", err)
+		}
+
+		ex.Session = &dbclient.SessionDTO{
+			Sid: sid,
+		}
+
+		// TODO: See if we can get away with not saving a session for every user right away.
+		err = ex.DBClient.CreateSession(ctx, *ex.Session)
+		if err != nil {
+			log.Printf("Error saving session: %v", err)
+		}
+
+		cookie = &http.Cookie{
+			Name:  "prestige_sid",
+			Value: sid,
+		}
+	}
+
+	go ex.PushExpiry(context.Background())
+
+	cookie.Path = "/" // Without this, it gets the current request's path instead.
+	cookie.Expires = time.Now().Add(time.Hour * 24 * 7)
+	cookie.HttpOnly = true
+	//cookie.SameSite = http.SameSiteStrictMode
+	// cookie.Secure = true // TODO: Detect if user is on HTTPS, and set this accordingly.
+	http.SetCookie(ex.ResponseWriter, cookie)
+
+	//ex.SessionManager = &dbclient.SessionManagerImpl{
+	//	Sid: sid,
+	//	DB:  ex.DBClient,
+	//}
+
+	return ex.Session
+}
+
+func (ex Exchange) SetSessionUser(ctx context.Context, email string) {
+	err := ex.DBClient.UpdateSession(ctx, ex.Session.Sid, map[string]any{
+		"email": email,
+	})
+	if err != nil {
+		log.Printf("Error setting email in session: %q; %v", ex.Session.Sid, err)
+	}
+	ex.Session.Email = email
+}
+
+func (ex Exchange) SaveSessionGithubAuthState(ctx context.Context, state string) {
+	err := ex.DBClient.UpdateSession(ctx, ex.Session.Sid, map[string]any{
+		"githubAuthState": state,
+	})
+	if err != nil {
+		log.Printf("Error setting githubAuthState in session: %q; %v", ex.Session.Sid, err)
+	}
+	ex.Session.GithubAuthState = state
+}
+
+func (ex Exchange) PushExpiry(ctx context.Context) {
+	expiresAt := time.Now().Add(time.Hour * 24 * 7)
+	err := ex.DBClient.UpdateSession(ctx, ex.Session.Sid, map[string]any{
+		"expiresAt": expiresAt,
+	})
+	if err != nil {
+		log.Printf("Error setting expiresAt in session: %q; %v", ex.Session.Sid, err)
+	}
+	ex.Session.ExpiresAt = expiresAt
+}
+
+func (ex Exchange) ClearUserInSession(ctx context.Context) {
+	ex.SetSessionUser(ctx, "")
+}
+
+func (ex Exchange) IsAddressAllowedForProxy(address string) bool {
+	return utils.IsAddressAllowed(address, ex.Config.ProxyDisallowedHosts, ex.Config.ProxyDisallowedPrefixes)
+}
