@@ -187,3 +187,192 @@ test("get request with an ending", async () => {
 			type: BlockType.HTTP_REQUEST,
 			start: 5,
 			end: 6,
+			header: {
+				start: 5,
+				end: 5,
+			},
+			payload: null,
+		},
+	])
+})
+
+test("one js and one request block", async () => {
+	const structure = parse([
+		"### javascript",
+		"void 0",
+		"###",
+		"GET http://httpbun.com",
+		"",
+	])
+
+	expect(structure).toBeDefined()
+	expect(structure).toStrictEqual([
+		{
+			type: BlockType.PAGE_BREAK,
+			start: 0,
+			end: 0,
+			tail: "javascript",
+		},
+		{
+			type: BlockType.JAVASCRIPT,
+			start: 1,
+			end: 1,
+		},
+		{
+			type: BlockType.PAGE_BREAK,
+			start: 2,
+			end: 2,
+			tail: "",
+		},
+		{
+			type: BlockType.HTTP_REQUEST,
+			start: 3,
+			end: 4,
+			header: {
+				start: 3,
+				end: 3,
+			},
+			payload: null,
+		},
+	])
+})
+
+test("multipart with single string file in single line", async () => {
+	const structure = parse([
+		"POST http://httpbun.com/post",
+		"",
+		"= this.multipart({ file: 'file content' })",
+	])
+
+	expect(structure).toBeDefined()
+	expect(structure).toStrictEqual([
+		{
+			type: BlockType.HTTP_REQUEST,
+			start: 0,
+			end: 2,
+			header: {
+				start: 0,
+				end: 0,
+			},
+			payload: {
+				start: 2,
+				end: 2,
+			},
+		},
+	])
+})
+
+test("multipart with await from bucket in single line", async () => {
+	const structure = parse([
+		"POST http://httpbun.com/post",
+		"",
+		"= this.multipart({ file: await this.fileFromBucket('data.txt') })",
+	])
+
+	expect(structure).toBeDefined()
+	expect(structure).toStrictEqual([
+		{
+			type: BlockType.HTTP_REQUEST,
+			start: 0,
+			end: 2,
+			header: {
+				start: 0,
+				end: 0,
+			},
+			payload: {
+				start: 2,
+				end: 2,
+			},
+		},
+	])
+})
+
+test("multipart with await from bucket in multiple lines", async () => {
+	const structure = parse([
+		"POST http://httpbun.com/post",
+		"",
+		"= this.multipart({",
+		"  file: await this.fileFromBucket('data.txt')",
+		"})",
+	])
+
+	expect(structure).toBeDefined()
+	expect(structure).toStrictEqual([
+		{
+			type: BlockType.HTTP_REQUEST,
+			start: 0,
+			end: 4,
+			header: {
+				start: 0,
+				end: 0,
+			},
+			payload: {
+				start: 2,
+				end: 4,
+			},
+		},
+	])
+})
+
+test("post request with body and a load handler", async () => {
+	const structure = parse([
+		"POST http://httpbun.com/post",
+		"",
+		"some body content",
+		"some more body content",
+		"still more body content",
+		"",
+		"@onLoad(response) {",
+		"\tconsole.log('got response', response)",
+		"}",
+	])
+
+	expect(structure).toBeDefined()
+	expect(structure).toStrictEqual([
+		{
+			type: BlockType.HTTP_REQUEST,
+			start: 0,
+			end: 8,
+			header: {
+				start: 0,
+				end: 0,
+			},
+			payload: {
+				start: 2,
+				end: 4,
+			},
+			eventHandlers: {
+				start: 6,
+				end: 8,
+			},
+		},
+	])
+})
+
+test("get request with a load handler", async () => {
+	const structure = parse([
+		"GET http://httpbun.com/get",
+		"",
+		"@onLoad(response) {",
+		"\tconsole.log('got response', response)",
+		"}",
+	])
+
+	expect(structure).toBeDefined()
+	expect(structure).toStrictEqual([
+		{
+			type: BlockType.HTTP_REQUEST,
+			start: 0,
+			end: 4,
+			header: {
+				start: 0,
+				end: 0,
+			},
+			payload: null,
+			eventHandlers: {
+				start: 2,
+				end: 4,
+			},
+		},
+	])
+})
