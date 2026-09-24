@@ -5,3 +5,10 @@
   translation: Edit this page
 
 - id: Last modified by
+  translation: Last modified by
+
+- id: Expand
+  translation: Expand
+
+- id: bookSearchConfig
+  translation: '{ cache: true }'
