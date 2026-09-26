@@ -7,3 +7,30 @@ $endLevel: 6;
       counter-increment: h#{$currentLevel};
       counter-reset: h#{$currentLevel + 1};
 
+      $content: "";
+      @for $n from $startLevel through $currentLevel {
+        $content: $content + 'counter(h#{$n})"."';
+      }
+
+      &::before {
+        content: unquote($content) " ";
+      }
+    }
+  }
+}
+
+.book-toc nav ul {
+  li {
+    counter-increment: item;
+
+    &:first-child {
+      counter-reset: item;
+    }
+
+    &:before {
+      content: counters(item, ".") ". ";
+      float: left;
+      margin-inline-end: $padding-4;
+    }
+  }
+}
