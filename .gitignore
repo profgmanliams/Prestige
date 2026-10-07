@@ -3,3 +3,26 @@
 node_modules
 
 /backend/assets/static
+
+/frontend/dist
+/frontend/dist-*
+/frontend/coverage
+
+/ui-tests/prestige
+/ui-tests/test-results/
+/ui-tests/playwright-report/
+
+/docs/public
+/docs/hugo
+.hugo_build.lock
+
+env-*.sh
+/package.tar.gz
+/prestige
+
+.*cache
+
+.DS_Store
+
+/.idea
+*.iml
