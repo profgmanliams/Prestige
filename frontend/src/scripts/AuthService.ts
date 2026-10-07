@@ -63,3 +63,198 @@ class AuthServiceImpl {
 					this.authState = AuthState.ANONYMOUS
 					this.isGistAvailable(false)
 					this.currentUser(null)
+				} else {
+					this.authState = AuthState.LOGGED_IN
+					this.isGistAvailable(response.user?.isGitHubConnected ?? false)
+					this.currentUser(response.user)
+				}
+			})
+			.catch(() => {
+				this.authState = AuthState.ANONYMOUS
+				this.isGistAvailable(false)
+				this.currentUser(null)
+			})
+			.finally(m.redraw)
+	}
+
+	getAuthState(): AuthState {
+		return this.authState
+	}
+
+	async signup(email: string, password: string): Promise<void> {
+		const recaptchaSiteKey = await getRecaptchaSiteKey()
+		let token: null | string = null
+
+		if (recaptchaSiteKey !== "") {
+			if (typeof grecaptcha === "undefined") {
+				await new Promise((resolve, reject) => {
+					const s = document.createElement("script")
+					s.src = "https://www.google.com/recaptcha/enterprise.js?render=" + recaptchaSiteKey
+					s.onload = resolve
+					s.onerror = reject
+					document.body.appendChild(s)
+				})
+			}
+
+			await new Promise(resolve => grecaptcha.enterprise.ready(resolve))
+
+			try {
+				token = await grecaptcha.enterprise.execute(recaptchaSiteKey, { action: "SIGNUP" })
+			} catch (error) {
+				console.error("Error getting reCAPTCHA token", error)
+				alert("Unable to do reCAPTCHA, signup failed.")
+				return
+			}
+		}
+
+		return this.authAction("signup", email, password, token)
+	}
+
+	login(email: string, password: string): Promise<void> {
+		return this.authAction("login", email, password)
+	}
+
+	authAction(urlPath: string, email: string, password: string, recaptchaToken: null | string = null): Promise<void> {
+		const prevState = this.authState
+		this.authState = AuthState.PENDING
+
+		return m.request<{ user: null | User }>({
+			method: "POST",
+			url: AUTH_URL_BASE + urlPath,
+			withCredentials: true,
+			body: {
+				email,
+				password,
+				recaptchaToken,
+			},
+			headers: {
+				"Content-Type": "application/json",
+			},
+		})
+			.then((response) => {
+				this.authState = AuthState.LOGGED_IN
+				this.isGistAvailable(response.user?.isGitHubConnected ?? false)
+				this.currentUser(response.user)
+			})
+			.catch(error => {
+				this.authState = prevState
+				return Promise.reject(error)
+			})
+	}
+
+	logout(): Promise<void> {
+		const prevState = this.authState
+		this.authState = AuthState.PENDING
+
+		return m.request<void>({
+			method: "POST",
+			url: AUTH_URL_BASE + "logout",
+			withCredentials: true,
+			headers: {
+				"Content-Type": "application/json",
+			},
+		})
+			.then(() => {
+				this.authState = AuthState.ANONYMOUS
+				this.isGistAvailable(false)
+				this.currentUser(null)
+			})
+			.catch(() => {
+				this.authState = prevState
+			})
+	}
+
+	startOAuth(): void {
+		const prevState = this.authState
+		this.authState = AuthState.OAUTH_WAITING
+
+		if (this.oAuthWindow != null) {
+			if (!this.oAuthWindow.closed) {
+				this.oAuthWindow.close()
+			}
+			this.oAuthWindow = null
+		}
+
+		this.oAuthWindow = window.open(
+			"/auth/github",
+			"github-oauth",
+			"menubar=no,status=no,width=600,height=500",
+		)
+
+		if (this.oAuthWindow == null) {
+			alert("Unable to open OAuth popup!")
+			this.authState = prevState
+			return
+		}
+
+		const intervalId = setInterval(() => {
+			if (this.oAuthWindow == null || this.oAuthWindow.closed) {
+				this.check()
+				clearInterval(intervalId)
+				this.oAuthWindow = null
+				m.redraw()
+			}
+		}, 300)
+
+		window.addEventListener("message", messageHandler, false)
+
+		function messageHandler(event: MessageEvent): void {
+			if (event.origin !== window.location.origin) {
+				console.warn("Nasty stuff alert, from '" + event.origin + "'.", event)
+				return
+			}
+			if (!isAuthMessage(event.data)) {
+				console.warn("Invalid message data, from '" + event.origin + "'.", event)
+				return
+			}
+			const message = event.data as AuthMessage
+			if (message.isApproved) {
+				Toaster.push("success", "OAuth with GitHub successful.")
+			} else if (message.error === "access_denied") {
+				Toaster.push("danger", "OAuth with GitHub rejected. Perhaps, some other time!")
+			} else {
+				Toaster.push("danger", "OAuth with GitHub failed. Sorry about this.")
+			}
+			window.removeEventListener("message", messageHandler)
+			m.redraw()
+		}
+	}
+
+	focusOAuthWindow(): void {
+		this.oAuthWindow?.focus()
+	}
+
+	forgotPasswordRequest(email: string): Promise<void> {
+		return m.request<void>({
+			method: "POST",
+			url: AUTH_URL_BASE + "forgot-password/request",
+			withCredentials: true,
+			body: {
+				email,
+			},
+			headers: {
+				"Content-Type": "application/json",
+			},
+		})
+			.then(() => {
+				Toaster.push("success", "Password reset email sent.")
+			})
+			.catch(() => {
+				Toaster.push("danger", "Password reset failed.")
+			})
+	}
+}
+
+function isAuthMessage(object: unknown): object is AuthMessage {
+	if (object == null) {
+		return false
+	}
+
+	const am = object as AuthMessage
+	return am.type === "oauth"
+		&& am.provider === "github"
+		&& typeof am.isApproved === "boolean"
+		&& (am.error == null || typeof am.error === "string")
+}
+
+export default new AuthServiceImpl
