@@ -50,3 +50,55 @@
   /**
    * @param {String} character
    * @returns {Boolean} 
+   */
+  function isHotkey(character) {
+    const dataHotkeys = input.getAttribute('data-hotkeys') || '';
+    return dataHotkeys.indexOf(character) >= 0;
+  }
+
+  function init() {
+    input.removeEventListener('focus', init); // init once
+    input.required = true;
+
+    fetch(searchDataURL)
+      .then(pages => pages.json())
+      .then(pages => {
+        window.bookSearchIndex = FlexSearch.create('balance', indexConfig);
+        window.bookSearchIndex.add(pages);
+      })
+      .then(() => input.required = false)
+      .then(search);
+  }
+
+  function search() {
+    while (results.firstChild) {
+      results.removeChild(results.firstChild);
+    }
+
+    if (!input.value) {
+      return;
+    }
+
+    const searchHits = window.bookSearchIndex.search(input.value, 10);
+    searchHits.forEach(function (page) {
+      const li = element('<li><a href></a><small></small></li>');
+      const a = li.querySelector('a'), small = li.querySelector('small');
+
+      a.href = page.href;
+      a.textContent = page.title;
+      small.textContent = page.section;
+
+      results.appendChild(li);
+    });
+  }
+
+  /**
+   * @param {String} content
+   * @returns {Node}
+   */
+  function element(content) {
+    const div = document.createElement('div');
+    div.innerHTML = content;
+    return div.firstChild;
+  }
+})();
