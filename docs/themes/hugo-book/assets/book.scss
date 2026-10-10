@@ -3,3 +3,15 @@
 @import "themes/{{ default "light" .Site.Params.BookTheme }}";
 
 @import "normalize";
+@import "utils";
+@import "main";
+@import "fonts";
+@import "print";
+
+@import "markdown";
+@import "shortcodes";
+
+// Custom defined styles
+@import "custom";
+
+@import "code-blocks";
