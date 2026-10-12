@@ -11,3 +11,16 @@ db.getSiblingDB("TestLoginForUserWithGithub").users.insertOne({
 		accessToken: Binary(Buffer.from("ZHVtbXktYWNjZXNzLXRva2Vu", "base64")),
 	},
 	"isEmailVerified": false,
+	"password": Binary(Buffer.from("YmNyeXB0JCQyYSQxNCRZNTMxWWozcVh2cm13WW5yLk9ldThlTUIuVEVRRUVvdWVzSXNsaVRPVUtMQW9ydUJ2OVByVw==", "base64")),
+	"createdAt": new Date,
+})
+
+db.getSiblingDB("TestLoginForUserWithoutGithub").users.insertOne({
+	"email": "TestLoginForUserWithoutGithub@example.com",
+	"github": null,
+	"isEmailVerified": false,
+	"password": Binary(Buffer.from("YmNyeXB0JCQyYSQxNCRZNTMxWWozcVh2cm13WW5yLk9ldThlTUIuVEVRRUVvdWVzSXNsaVRPVUtMQW9ydUJ2OVByVw==", "base64")),
+	"createdAt": new Date,
+})
+
+
