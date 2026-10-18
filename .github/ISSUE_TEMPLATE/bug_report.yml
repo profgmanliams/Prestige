@@ -1,0 +1,11 @@
+name: Bug report
+description: Something behaves differently than documented
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes: {label: What happened}
+    validations: {required: true}
+  - type: input
+    id: version
+    attributes: {label: Version}
