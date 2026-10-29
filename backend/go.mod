@@ -1,9 +1,9 @@
 module github.com/sharat87/prestige
 
-go 1.18
+go 1.21
 
 require (
-	github.com/google/go-cmp v0.5.2
+	github.com/google/go-cmp v0.7.0
 	go.mongodb.org/mongo-driver v1.10.1
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
 	golang.org/x/net v0.0.0-20220812174116-3211cb980234
