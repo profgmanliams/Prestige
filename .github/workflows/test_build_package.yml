@@ -44,7 +44,7 @@ jobs:
       #    ./manage.sh test-ui
 
       - name: "Upload test results"
-        uses: "actions/upload-artifact@v2"
+        uses: "actions/upload-artifact@v7"
         if: always()
         with:
           name: "ui-results-${{ github.sha }}"
