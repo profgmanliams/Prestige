@@ -58,3 +58,7 @@ jobs:
           docker build -t ghcr.io/${{ github.actor }}/prestige:latest .
           docker login ghcr.io --username ${{ github.actor }} --password ${{ secrets.GITHUB_TOKEN }}
           docker push --all-tags ghcr.io/${{ github.actor }}/prestige
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
