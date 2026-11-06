@@ -185,7 +185,7 @@
 		"lodash": "^4.17.21",
 		"mithril": "^2.2.2",
 		"parcel": "^2.7.0",
-		"rollbar": "^2.25.1",
+		"rollbar": "^4.1.0",
 		"tachyons": "^4.12.0",
 		"ts-jest": "^28.0.8",
 		"ts-node": "^10.9.1",
